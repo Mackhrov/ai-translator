@@ -4,7 +4,7 @@ function LimitBar() {
   const [limit, setLimit] = useState(null)
 
   useEffect(() => {
-    fetch('http://localhost:8000/limit')
+    fetch('https://ai-translator-production-d1ee.up.railway.app/limit')
       .then(r => r.json())
       .then(setLimit)
       .catch(() => {})
