@@ -53,10 +53,10 @@ function App() {
     setLoading(true)
     setError('')
     setTranslation('') 
-
-    const endpoint = mode === 'simple'
-      ? 'http://localhost:8000/translate'
-      : 'http://localhost:8000/translate/detailed'
+//ai-translator-production-d1ee.up.railway.app
+   const endpoint = mode === 'simple'
+  ? 'https://ai-translator-production.up.railway.app/translate'
+  : 'https://ai-translator-production.up.railway.app/translate/detailed'
 
     try {
       const response = await fetch(endpoint, {
