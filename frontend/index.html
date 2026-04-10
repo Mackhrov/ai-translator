@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Переводчик</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .wrapper { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 16px; }
+
+    h1 { font-size: 22px; color: #1a1a1a; }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid #e5e5e5;
+    }
+
+    label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; }
+
+    .row { display: flex; gap: 12px; margin-bottom: 16px; }
+    .row > * { flex: 1; }
+
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+    }
+
+    .mode-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 9px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: white;
+      font-size: 13px;
+      cursor: pointer;
+      color: #555;
+      transition: all .15s;
+      text-align: center;
+    }
+
+    .mode-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    .mode-desc {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 14px;
+      padding: 8px 12px;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+
+    .detected-lang {
+      font-size: 12px;
+      color: #2563eb;
+      margin-bottom: 10px;
+      min-height: 18px;
+    }
+
+    .textarea-wrap { position: relative; margin-bottom: 6px; }
+
+    textarea {
+      width: 100%;
+      padding: 12px;
+      padding-bottom: 28px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 120px;
+      font-family: sans-serif;
+    }
+
+    textarea:focus { outline: none; border-color: #2563eb; }
+
+    .counter { position: absolute; bottom: 8px; right: 12px; font-size: 12px; color: #aaa; }
+    .counter.warn { color: #ef4444; }
+
+    button.primary {
+      width: 100%;
+      padding: 12px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button.primary:hover { background: #1d4ed8; }
+    button.primary:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    .result-box { display: none; margin-top: 16px; }
+
+    /* Быстрый перевод */
+    .result-simple {
+      background: #f0f7ff;
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .result-header span { font-size: 12px; color: #666; }
+
+    .copy-btn {
+      font-size: 12px;
+      padding: 4px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      color: #444;
+    }
+
+    .copy-btn:hover { background: #f5f5f5; }
+    .result-text { font-size: 15px; color: #1a1a1a; line-height: 1.6; }
+
+    /* Развёрнутый перевод */
+    .result-detailed { display: flex; flex-direction: column; gap: 12px; }
+
+    .detail-block {
+      border: 1px solid #e5e5e5;
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .detail-block-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: #2563eb;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-block-body {
+      font-size: 14px;
+      color: #1a1a1a;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .variants-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+
+    .variants-list li {
+      padding: 8px 12px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #333;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .variants-list li:hover { border-color: #2563eb; background: #eff6ff; }
+
+    .error {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      background: #fff0f0;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #dc2626;
+    }
+
+    .history-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #444;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .clear-btn { font-size: 12px; color: #999; background: none; border: none; cursor: pointer; }
+    .clear-btn:hover { color: #ef4444; }
+
+    .history-empty { font-size: 13px; color: #bbb; text-align: center; padding: 16px 0; }
+
+    .history-item {
+      border-bottom: 1px solid #f0f0f0;
+      padding: 12px 0;
+      cursor: pointer;
+    }
+
+    .history-item:last-child { border-bottom: none; }
+    .history-item:hover { background: #fafafa; border-radius: 8px; padding: 12px 8px; }
+    .history-item .original { font-size: 13px; color: #888; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-item .translated { font-size: 14px; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-item .lang-badge { font-size: 11px; color: #2563eb; background: #eff6ff; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 4px; }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <h1>AI Переводчик</h1>
+
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>Язык оригинала</label>
+          <select id="sourceLang">
+            <option value="auto">Определить автоматически</option>
+            <option value="Russian">Русский</option>
+            <option value="English">Английский</option>
+            <option value="German">Немецкий</option>
+            <option value="French">Французский</option>
+            <option value="Spanish">Испанский</option>
+            <option value="Chinese">Китайский</option>
+          </select>
+        </div>
+        <div>
+          <label>Язык перевода</label>
+          <select id="targetLang">
+            <option value="English">Английский</option>
+            <option value="Russian">Русский</option>
+            <option value="German">Немецкий</option>
+            <option value="French">Французский</option>
+            <option value="Spanish">Испанский</option>
+            <option value="Chinese">Китайский</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Режим перевода</label>
+      <div class="mode-toggle">
+        <div class="mode-btn active" onclick="setMode('simple')">Быстрый</div>
+        <div class="mode-btn" onclick="setMode('detailed')">Развёрнутый</div>
+      </div>
+
+      <div class="mode-desc" id="modeDesc">
+        Простой перевод текста без пояснений
+      </div>
+
+      <div class="detected-lang" id="detectedLang"></div>
+
+      <label>Текст для перевода</label>
+      <div class="textarea-wrap">
+        <textarea id="inputText" placeholder="Введи текст..." maxlength="1000"
+          oninput="updateCounter()"></textarea>
+        <span class="counter" id="counter">0 / 1000</span>
+      </div>
+
+      <button class="primary" id="btn" onclick="doTranslate()">Перевести</button>
+
+      <div class="result-box" id="resultBox">
+        <div class="result-simple" id="resultSimple">
+          <div class="result-header">
+            <span>Перевод</span>
+            <button class="copy-btn" onclick="copyResult()">Копировать</button>
+          </div>
+          <div class="result-text" id="resultText"></div>
+        </div>
+
+        <div class="result-detailed" id="resultDetailed" style="display:none">
+        </div>
+      </div>
+
+      <div class="error" id="error"></div>
+    </div>
+
+    <div class="card">
+      <div class="history-title">
+        <span>История</span>
+        <button class="clear-btn" onclick="clearHistory()">Очистить</button>
+      </div>
+      <div id="historyList">
+        <div class="history-empty">Переводы появятся здесь</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentMode = 'simple'
+    let history = []
+
+    const modeDescriptions = {
+      simple: 'Простой перевод текста без пояснений',
+      detailed: 'Перевод + грамматика + несколько вариантов + советы по использованию'
+    }
+
+    function setMode(mode) {
+      currentMode = mode
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'))
+      event.target.classList.add('active')
+      document.getElementById('modeDesc').textContent = modeDescriptions[mode]
+      document.getElementById('resultBox').style.display = 'none'
+    }
+
+    function updateCounter() {
+      const len = document.getElementById('inputText').value.length
+      const el = document.getElementById('counter')
+      el.textContent = `${len} / 1000`
+      el.className = 'counter' + (len > 900 ? ' warn' : '')
+    }
+
+    function buildPrompt(text, sourceLang, targetLang, mode) {
+      const fromPart = sourceLang === 'auto'
+        ? 'Detect the language automatically.'
+        : `The source language is ${sourceLang}.`
+
+      if (mode === 'simple') {
+        return `${fromPart} Translate the following text to ${targetLang}. Return only the translation, no explanation.\n\n${text}`
+      }
+
+      return `${fromPart} Translate the following text to ${targetLang}.
+
+Respond in Russian with this exact structure:
+
+ОПРЕДЕЛЁН ЯЗЫК: [detected language name in Russian]
+
+ПЕРЕВОД:
+[main translation]
+
+ВАРИАНТЫ:
+- [alternative 1]
+- [alternative 2]
+- [alternative 3]
+
+ГРАММАТИКА:
+[brief grammar explanation: tense, structure, key words]
+
+СОВЕТ:
+[when and how to use this phrase/word]
+
+Text to translate: ${text}`
+    }
+
+    function parseDetailed(raw) {
+      const sections = {
+        lang: '',
+        translation: '',
+        variants: [],
+        grammar: '',
+        tip: ''
+      }
+
+      const langMatch = raw.match(/ОПРЕДЕЛЁН ЯЗЫК:\s*(.+)/i)
+      if (langMatch) sections.lang = langMatch[1].trim()
+
+      const transMatch = raw.match(/ПЕРЕВОД:\s*([\s\S]*?)(?=ВАРИАНТЫ:|$)/i)
+      if (transMatch) sections.translation = transMatch[1].trim()
+
+      const varMatch = raw.match(/ВАРИАНТЫ:\s*([\s\S]*?)(?=ГРАММАТИКА:|$)/i)
+      if (varMatch) {
+        sections.variants = varMatch[1]
+          .split('\n')
+          .map(l => l.replace(/^-\s*/, '').trim())
+          .filter(Boolean)
+      }
+
+      const gramMatch = raw.match(/ГРАММАТИКА:\s*([\s\S]*?)(?=СОВЕТ:|$)/i)
+      if (gramMatch) sections.grammar = gramMatch[1].trim()
+
+      const tipMatch = raw.match(/СОВЕТ:\s*([\s\S]*?)$/i)
+      if (tipMatch) sections.tip = tipMatch[1].trim()
+
+      return sections
+    }
+
+    async function doTranslate() {
+      const text = document.getElementById('inputText').value.trim()
+      const sourceLang = document.getElementById('sourceLang').value
+      const targetLang = document.getElementById('targetLang').value
+      const btn = document.getElementById('btn')
+      const resultBox = document.getElementById('resultBox')
+      const errorEl = document.getElementById('error')
+      const detectedEl = document.getElementById('detectedLang')
+
+      if (!text) return
+
+      resultBox.style.display = 'none'
+      errorEl.style.display = 'none'
+      detectedEl.textContent = ''
+      btn.disabled = true
+      btn.innerHTML = '<span class="spinner"></span>Переводим...'
+
+      const prompt = buildPrompt(text, sourceLang, targetLang, currentMode)
+
+     try {
+        const endpoint = currentMode === 'simple'
+          ? 'http://localhost:8000/translate'
+          : 'http://localhost:8000/translate/detailed'
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, target_language: targetLang, source_language: sourceLang })
+        })
+
+        const data = await response.json()
+        if (!data.translation) throw new Error('Нет ответа от сервера')
+
+        const raw = data.translation
+
+        if (currentMode === 'simple') {
+          document.getElementById('resultSimple').style.display = 'block'
+          document.getElementById('resultDetailed').style.display = 'none'
+          document.getElementById('resultText').textContent = raw
+          addToHistory(text, raw, targetLang)
+
+        } else {
+          const parsed = parseDetailed(raw)
+
+          if (parsed.lang) {
+            detectedEl.textContent = `Определён язык: ${parsed.lang}`
+          }
+
+          document.getElementById('resultSimple').style.display = 'none'
+          const detailedEl = document.getElementById('resultDetailed')
+          detailedEl.style.display = 'flex'
+
+          detailedEl.innerHTML = `
+            <div class="detail-block">
+              <div class="detail-block-title">Перевод</div>
+              <div class="detail-block-body">${parsed.translation || raw}</div>
+            </div>
+            ${parsed.variants.length ? `
+            <div class="detail-block">
+              <div class="detail-block-title">Варианты</div>
+              <ul class="variants-list">
+                ${parsed.variants.map(v => `<li onclick="copyText('${v.replace(/'/g, "\\'")}')">${v}</li>`).join('')}
+              </ul>
+            </div>` : ''}
+            ${parsed.grammar ? `
+            <div class="detail-block">
+              <div class="detail-block-title">Грамматика</div>
+              <div class="detail-block-body">${parsed.grammar}</div>
+            </div>` : ''}
+            ${parsed.tip ? `
+            <div class="detail-block">
+              <div class="detail-block-title">Совет</div>
+              <div class="detail-block-body">${parsed.tip}</div>
+            </div>` : ''}
+          `
+
+          addToHistory(text, parsed.translation || raw, targetLang)
+        }
+
+        resultBox.style.display = 'block'
+
+      } catch (err) {
+        errorEl.textContent = 'Ошибка: ' + err.message
+        errorEl.style.display = 'block'
+      } finally {
+        btn.disabled = false
+        btn.textContent = 'Перевести'
+      }
+    }
+
+    function copyResult() {
+      copyText(document.getElementById('resultText').textContent)
+      const btn = document.querySelector('.copy-btn')
+      btn.textContent = 'Скопировано!'
+      setTimeout(() => btn.textContent = 'Копировать', 1500)
+    }
+
+    function copyText(text) {
+      navigator.clipboard.writeText(text)
+    }
+
+    function addToHistory(original, translated, lang) {
+      history.unshift({ original, translated, lang })
+      if (history.length > 10) history.pop()
+      renderHistory()
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('historyList')
+      if (history.length === 0) {
+        list.innerHTML = '<div class="history-empty">Переводы появятся здесь</div>'
+        return
+      }
+      list.innerHTML = history.map((item, i) => `
+        <div class="history-item" onclick="loadFromHistory(${i})">
+          <span class="lang-badge">${item.lang}</span>
+          <div class="original">${item.original}</div>
+          <div class="translated">${item.translated}</div>
+        </div>
+      `).join('')
+    }
+
+    function loadFromHistory(index) {
+      const item = history[index]
+      document.getElementById('inputText').value = item.original
+      document.getElementById('resultText').textContent = item.translated
+      document.getElementById('resultSimple').style.display = 'block'
+      document.getElementById('resultDetailed').style.display = 'none'
+      document.getElementById('resultBox').style.display = 'block'
+      updateCounter()
+    }
+
+    function clearHistory() {
+      history = []
+      renderHistory()
+    }
+  </script>
+</body>
+</html>
