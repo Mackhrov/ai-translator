@@ -55,8 +55,8 @@ function App() {
     setTranslation('') 
 //ai-translator-production-d1ee.up.railway.app
    const endpoint = mode === 'simple'
-  ? 'https://ai-translator-production.up.railway.app/translate'
-  : 'https://ai-translator-production.up.railway.app/translate/detailed'
+  ? 'https://ai-translator-production-d1ee.up.railway.app/translator'
+  : 'https://ai-translator-production-d1ee.up.railway.app/translate/detailed'
 
     try {
       const response = await fetch(endpoint, {
