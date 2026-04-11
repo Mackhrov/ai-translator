@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Optional
 import requests as req
+import os
 
 from database import SessionLocal, User, Saved, History, init_db
 from auth import hash_password, verify_password, create_token, decode_token
@@ -14,12 +15,16 @@ init_db()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://ai-translator-snowy-ten.vercel.app",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=True,
 )
 
-GROQ_API_KEY = "твой_ключ"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 DAILY_LIMIT = 10
 limits = defaultdict(lambda: {"count": 0, "date": ""})
 
