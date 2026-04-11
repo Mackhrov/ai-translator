@@ -1,4 +1,4 @@
-const BASE = 'http://localhost:8000'
+const BASE = 'https://ai-translator-production-d1ee.up.railway.app'
 
 function getToken() {
   return localStorage.getItem('lingua_token')
