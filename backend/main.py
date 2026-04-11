@@ -1,21 +1,16 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from collections import defaultdict
 from datetime import datetime
-import requests
-import os
-from dotenv import load_dotenv
+from typing import Optional
+import requests as req
 
-# Load environment variables from .env file
-load_dotenv()
-
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-
-if not GROQ_API_KEY:
-    raise ValueError("GROQ_API_KEY environment variable is not set. Please create a .env file with GROQ_API_KEY=your_key")
+from database import SessionLocal, User, Saved, History, init_db
+from auth import hash_password, verify_password, create_token, decode_token
 
 app = FastAPI()
+init_db()
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,55 +19,108 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-limits = defaultdict(lambda: {"count": 0, "date": ""})
+GROQ_API_KEY = "твой_ключ"
 DAILY_LIMIT = 10
+limits = defaultdict(lambda: {"count": 0, "date": ""})
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def get_current_user(authorization: Optional[str] = Header(None), db=Depends(get_db)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Нужна авторизация")
+    token = authorization.replace("Bearer ", "")
+    user_id = decode_token(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Пользователь не найден")
+    return user
+
 def check_limit(request: Request):
     ip = request.client.host
     today = datetime.now().strftime("%Y-%m-%d")
-
-    # Если новый день — сбрасываем счётчик
     if limits[ip]["date"] != today:
         limits[ip] = {"count": 0, "date": today}
-
     if limits[ip]["count"] >= DAILY_LIMIT:
-        raise HTTPException(
-            status_code=429,
-            detail=f"Лимит {DAILY_LIMIT} переводов в день исчерпан. Приходи завтра!"
-        )
-
+        raise HTTPException(status_code=429, detail="Лимит переводов исчерпан")
     limits[ip]["count"] += 1
+
+def call_groq(system: str, user: str) -> str:
+    response = req.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+        json={
+            "model": "llama-3.3-70b-versatile",
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user}
+            ],
+            "max_tokens": 1024,
+        }
+    )
+    data = response.json()
+    return data["choices"][0]["message"]["content"]
+
+# --- Модели запросов ---
+
+class RegisterRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 class TranslateRequest(BaseModel):
     text: str
     target_language: str = "English"
     source_language: str = "auto"
 
-def call_groq(system: str, user: str) -> str:
-    try:
-        response = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
-            json={
-                "model": "llama-3.3-70b-versatile",
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user}
-                ],
-                "max_tokens": 1024,
-            },
-            timeout=30
-        )
-        response.raise_for_status()
-        data = response.json()
-        
-        if "choices" not in data or not data["choices"]:
-            raise ValueError("Invalid API response: no choices found")
-        
-        return data["choices"][0]["message"]["content"]
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=503, detail=f"API error: {str(e)}")
-    except (KeyError, ValueError) as e:
-        raise HTTPException(status_code=500, detail=f"Failed to parse API response: {str(e)}")
+class SaveRequest(BaseModel):
+    original: str
+    translation: str
+    target_lang: str
+    mode: str
+
+# --- Auth endpoints ---
+
+@app.post("/register")
+def register(req_body: RegisterRequest, db=Depends(get_db)):
+    if db.query(User).filter(User.email == req_body.email).first():
+        raise HTTPException(status_code=400, detail="Email уже занят")
+    if db.query(User).filter(User.username == req_body.username).first():
+        raise HTTPException(status_code=400, detail="Имя пользователя занято")
+    if len(req_body.password) < 6:
+        raise HTTPException(status_code=400, detail="Пароль минимум 6 символов")
+    user = User(
+        email=req_body.email,
+        username=req_body.username,
+        password_hash=hash_password(req_body.password)
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    token = create_token(user.id)
+    return {"token": token, "username": user.username}
+
+@app.post("/login")
+def login(req_body: LoginRequest, db=Depends(get_db)):
+    user = db.query(User).filter(User.email == req_body.email).first()
+    if not user or not verify_password(req_body.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Неверный email или пароль")
+    token = create_token(user.id)
+    return {"token": token, "username": user.username}
+
+@app.get("/me")
+def me(current_user=Depends(get_current_user)):
+    return {"username": current_user.username, "email": current_user.email}
+
+# --- Translate endpoints ---
 
 @app.get("/")
 def health_check():
@@ -88,22 +136,24 @@ def get_limit(request: Request):
     return {"used": used, "total": DAILY_LIMIT, "remaining": DAILY_LIMIT - used}
 
 @app.post("/translate")
-def translate(req: TranslateRequest, request: Request):
+def translate(req_body: TranslateRequest, request: Request, current_user=Depends(get_current_user), db=Depends(get_db)):
     check_limit(request)
-    system = f"You are a professional translator. Translate text to {req.target_language}. Return only the translation, nothing else."
-    result = call_groq(system, req.text)
+    system = f"You are a professional translator. Translate text to {req_body.target_language}. Return only the translation, nothing else."
+    result = call_groq(system, req_body.text)
+    entry = History(user_id=current_user.id, original=req_body.text, translation=result, target_lang=req_body.target_language, mode="simple")
+    db.add(entry)
+    db.commit()
     return {"translation": result}
 
 @app.post("/translate/detailed")
-def translate_detailed(req: TranslateRequest, request: Request):
+def translate_detailed(req_body: TranslateRequest, request: Request, current_user=Depends(get_current_user), db=Depends(get_db)):
     check_limit(request)
-    system = """Ты профессиональный переводчик и преподаватель языков. Отвечай ТОЛЬКО на русском языке.
-Твой ответ должен содержать ровно 4 секции в таком формате:
+    system = """Ты профессиональный переводчик. Отвечай ТОЛЬКО на русском языке.
 
-ЯЗЫК: [название языка оригинала]
+ЯЗЫК: [язык оригинала]
 
 ПЕРЕВОД:
-[перевод на целевой язык]
+[перевод]
 
 ВАРИАНТЫ:
 - [вариант 1]
@@ -111,11 +161,44 @@ def translate_detailed(req: TranslateRequest, request: Request):
 - [вариант 3]
 
 ГРАММАТИКА:
-[объяснение грамматики на русском]
+[объяснение]
 
 СОВЕТ:
-[совет по использованию на русском]"""
-
-    user = f"Переведи на {req.target_language}:\n\n{req.text}"
-    result = call_groq(system, user)
+[совет]"""
+    user_msg = f"Переведи на {req_body.target_language}:\n\n{req_body.text}"
+    result = call_groq(system, user_msg)
+    entry = History(user_id=current_user.id, original=req_body.text, translation=result, target_lang=req_body.target_language, mode="detailed")
+    db.add(entry)
+    db.commit()
     return {"translation": result}
+
+# --- Словарь endpoints ---
+
+@app.post("/saved")
+def save_word(req_body: SaveRequest, current_user=Depends(get_current_user), db=Depends(get_db)):
+    already = db.query(Saved).filter(Saved.user_id == current_user.id, Saved.original == req_body.original, Saved.target_lang == req_body.target_lang).first()
+    if already:
+        raise HTTPException(status_code=400, detail="Уже сохранено")
+    item = Saved(user_id=current_user.id, original=req_body.original, translation=req_body.translation, target_lang=req_body.target_lang, mode=req_body.mode)
+    db.add(item)
+    db.commit()
+    return {"ok": True}
+
+@app.get("/saved")
+def get_saved(current_user=Depends(get_current_user), db=Depends(get_db)):
+    items = db.query(Saved).filter(Saved.user_id == current_user.id).order_by(Saved.created_at.desc()).all()
+    return [{"id": i.id, "original": i.original, "translation": i.translation, "targetLang": i.target_lang, "mode": i.mode} for i in items]
+
+@app.delete("/saved/{item_id}")
+def delete_saved(item_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
+    item = db.query(Saved).filter(Saved.id == item_id, Saved.user_id == current_user.id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Не найдено")
+    db.delete(item)
+    db.commit()
+    return {"ok": True}
+
+@app.get("/history")
+def get_history(current_user=Depends(get_current_user), db=Depends(get_db)):
+    items = db.query(History).filter(History.user_id == current_user.id).order_by(History.created_at.desc()).limit(20).all()
+    return [{"original": i.original, "translation": i.translation, "targetLang": i.target_lang, "mode": i.mode} for i in items]
