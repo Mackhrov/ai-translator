@@ -3,5 +3,6 @@ uvicorn
 requests
 python-dotenv
 sqlalchemy
-passlib[bcrypt]
+passlib
+bcrypt==4.0.1
 python-jose[cryptography]
