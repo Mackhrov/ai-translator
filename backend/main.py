@@ -94,6 +94,12 @@ class SaveRequest(BaseModel):
     target_lang: str
     mode: str
 
+lang_names = {
+    'ru': 'Russian', 'en': 'English', 'de': 'German',
+    'uk': 'Ukrainian', 'es': 'Spanish', 'zh': 'Chinese',
+    'fr': 'French'
+}
+ui_lang = lang_names.get(req_body.ui_language[:2] if req_body.ui_language else 'en', 'English')
 # --- Auth endpoints ---
 
 @app.post("/register")

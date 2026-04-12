@@ -1,102 +1,114 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 function SavedList({ saved, onRemove }) {
   const [expanded, setExpanded] = useState(null)
+  const { t } = useTranslation()
 
   if (saved.length === 0) {
     return (
-      <div style={{ background: 'var(--bg2)', borderRadius: '20px', padding: '40px 24px', border: '1px solid var(--border)', textAlign: 'center' }}>
-        <div style={{ fontSize: '13px', color: 'var(--text-dim)' }}>Словарь пуст — нажми "+ В словарь" после перевода</div>
+      <div style={{ background: 'var(--bg2)', borderRadius: '18px', padding: '40px 24px', border: '1px solid var(--border)', textAlign: 'center' }}>
+        <div style={{ fontSize: '32px', marginBottom: '12px', opacity: 0.3 }}>📖</div>
+        <div style={{ fontSize: '14px', color: 'var(--text3)' }}>{t('saved.empty')}</div>
       </div>
     )
   }
 
   function parseDetailed(raw) {
-    const s = { translation: '', variants: [], grammar: '', tip: '', lang: '' }
-    const langM = raw.match(/ЯЗЫК:\s*(.+)/i)
+    const s = { translation: '', variants: [], grammar: '', tip: '', lang: '', formality: '', transcription: '' }
+    const langM = raw.match(/LANGUAGE:\s*(.+)/i) || raw.match(/ЯЗЫК:\s*(.+)/i)
     if (langM) s.lang = langM[1].trim()
-    const transM = raw.match(/ПЕРЕВОД:\s*([\s\S]*?)(?=ВАРИАНТЫ:|$)/i)
+    const transM = raw.match(/TRANSLATION:\s*([\s\S]*?)(?=VARIANTS:|GRAMMAR:|TIP:|FORMALITY:|TRANSCRIPTION:|$)/i)
+      || raw.match(/ПЕРЕВОД:\s*([\s\S]*?)(?=ВАРИАНТЫ:|ГРАММАТИКА:|СОВЕТ:|$)/i)
     if (transM) s.translation = transM[1].trim()
-    const varM = raw.match(/ВАРИАНТЫ:\s*([\s\S]*?)(?=ГРАММАТИКА:|$)/i)
+    const varM = raw.match(/VARIANTS:\s*([\s\S]*?)(?=GRAMMAR:|TIP:|FORMALITY:|TRANSCRIPTION:|$)/i)
+      || raw.match(/ВАРИАНТЫ:\s*([\s\S]*?)(?=ГРАММАТИКА:|СОВЕТ:|$)/i)
     if (varM) s.variants = varM[1].split('\n').map(l => l.replace(/^-\s*/, '').trim()).filter(Boolean)
-    const gramM = raw.match(/ГРАММАТИКА:\s*([\s\S]*?)(?=СОВЕТ:|$)/i)
+    const gramM = raw.match(/GRAMMAR:\s*([\s\S]*?)(?=TIP:|FORMALITY:|TRANSCRIPTION:|$)/i)
+      || raw.match(/ГРАММАТИКА:\s*([\s\S]*?)(?=СОВЕТ:|$)/i)
     if (gramM) s.grammar = gramM[1].trim()
-    const tipM = raw.match(/СОВЕТ:\s*([\s\S]*?)$/i)
+    const tipM = raw.match(/TIP:\s*([\s\S]*?)(?=FORMALITY:|TRANSCRIPTION:|$)/i)
+      || raw.match(/СОВЕТ:\s*([\s\S]*?)(?=ФОРМАЛЬНОСТЬ:|$)/i)
     if (tipM) s.tip = tipM[1].trim()
+    const formM = raw.match(/FORMALITY:\s*([\s\S]*?)(?=TRANSCRIPTION:|$)/i)
+    if (formM) s.formality = formM[1].trim()
+    const transcrM = raw.match(/TRANSCRIPTION:\s*([\s\S]*?)$/i)
+    if (transcrM) s.transcription = transcrM[1].trim()
     return s
   }
 
-  const card = {
-    background: 'var(--bg2)',
-    borderRadius: '20px',
-    padding: '24px',
-    border: '1px solid var(--border)',
-  }
-
-  const sectionLabel = {
-    fontSize: '11px',
-    color: 'var(--accent)',
-    textTransform: 'uppercase',
-    letterSpacing: '1.5px',
-    marginBottom: '10px',
-    fontWeight: '600',
-  }
+  const card = { background: 'var(--bg2)', borderRadius: '16px', padding: '18px', border: '1px solid var(--border)' }
+  const sectionLabel = { fontSize: '10px', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px', fontWeight: '700' }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
-        Словарь — {saved.length}
+      <div style={{ fontSize: '11px', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
+        {t('saved.count', { count: saved.length })}
       </div>
 
       {saved.map((item, i) => {
-        const isOpen = expanded === i
         const isAI = item.mode === 'detailed'
+        const isOpen = expanded === i
         const parsed = isAI ? parseDetailed(item.translation) : null
+        const displayTranslation = isAI ? (parsed?.translation || item.translation) : item.translation
 
         return (
-          <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div key={i}>
             <div
+              onClick={() => isAI && setExpanded(isOpen ? null : i)}
               style={{
-                background: 'var(--bg3)',
-                borderRadius: '14px',
-                padding: '14px 16px',
+                background: 'var(--bg2)', borderRadius: '14px', padding: '14px 16px',
                 border: `1px solid ${isOpen ? 'var(--accent)' : 'var(--border)'}`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
                 cursor: isAI ? 'pointer' : 'default',
                 transition: 'border-color .15s',
+                display: 'flex', alignItems: 'center', gap: '12px',
               }}
-              onClick={() => isAI && setExpanded(isOpen ? null : i)}
             >
+              <div style={{
+                width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
+                background: isAI ? 'var(--accent-dim)' : 'var(--bg4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '16px',
+              }}>
+                {isAI ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                  </svg>
+                )}
+              </div>
+
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '15px', color: 'var(--text)', fontWeight: '500', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text3)', background: 'var(--bg4)', padding: '2px 7px', borderRadius: '100px' }}>
+                    {parsed?.lang || 'auto'} → {item.targetLang?.slice(0, 2).toUpperCase() || 'EN'}
+                  </span>
+                  {isAI && (
+                    <span style={{ fontSize: '10px', color: 'var(--accent)', background: 'var(--accent-dim)', padding: '2px 7px', borderRadius: '100px', fontWeight: '600' }}>
+                      AI
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '14px', color: 'var(--text)', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '2px' }}>
                   {item.original}
                 </div>
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {isAI ? (parsed.translation || item.translation) : item.translation}
+                <div style={{ fontSize: '13px', color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {displayTranslation}
                 </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                 {isAI && (
-                  <span style={{ fontSize: '11px', color: 'var(--teal)', background: '#0d2a22', padding: '3px 10px', borderRadius: '100px' }}>
-                    AI
-                  </span>
-                )}
-                <span style={{ fontSize: '11px', color: 'var(--accent)', background: 'var(--accent-dim)', padding: '3px 10px', borderRadius: '100px' }}>
-                  {item.targetLang}
-                </span>
-                {isAI && (
-                  <span style={{ fontSize: '14px', color: 'var(--text-dim)', transition: 'transform .2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>
-                    ↓
-                  </span>
+                  <span style={{ fontSize: '14px', color: 'var(--text3)', transform: isOpen ? 'rotate(180deg)' : 'none', display: 'inline-block', transition: 'transform .2s' }}>↓</span>
                 )}
                 <button
-                  onClick={e => { e.stopPropagation(); onRemove(i) }}
-                  style={{ width: '24px', height: '24px', borderRadius: '50%', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-dim)', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff6060'; e.currentTarget.style.color = '#ff6060' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-dim)' }}
+                  onClick={e => { e.stopPropagation(); onRemove(item.id) }}
+                  style={{ width: '26px', height: '26px', borderRadius: '50%', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', transition: 'all .15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--danger)'; e.currentTarget.style.color = 'var(--danger)' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text3)' }}
                 >
                   ×
                 </button>
@@ -104,43 +116,36 @@ function SavedList({ saved, onRemove }) {
             </div>
 
             {isOpen && isAI && parsed && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '8px' }}>
-                {parsed.lang && (
-                  <div style={{ fontSize: '12px', color: 'var(--teal)', padding: '5px 14px', background: '#0d2a22', borderRadius: '100px', display: 'inline-block', alignSelf: 'flex-start' }}>
-                    Язык: {parsed.lang}
-                  </div>
-                )}
-
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', paddingLeft: '8px' }}>
                 {parsed.translation && (
                   <div style={card}>
-                    <p style={sectionLabel}>Перевод</p>
+                    <p style={sectionLabel}>{t('result.translation')}</p>
                     <p style={{ fontSize: '18px', color: 'var(--text)', lineHeight: '1.5', fontWeight: '500' }}>{parsed.translation}</p>
                   </div>
                 )}
-
                 {parsed.variants.length > 0 && (
                   <div style={card}>
-                    <p style={sectionLabel}>Варианты</p>
+                    <p style={sectionLabel}>{t('result.variants')}</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {parsed.variants.map((v, vi) => (
-                        <div key={vi} style={{ padding: '10px 14px', background: 'var(--bg3)', borderRadius: '10px', fontSize: '14px', color: 'var(--text)' }}>
-                          {v}
-                        </div>
+                        <div key={vi} onClick={() => navigator.clipboard.writeText(v)}
+                          style={{ padding: '8px 12px', background: 'var(--bg3)', borderRadius: '8px', fontSize: '14px', color: 'var(--text)', cursor: 'pointer', border: '1px solid transparent', transition: 'border-color .15s' }}
+                          onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
+                          onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}
+                        >{v}</div>
                       ))}
                     </div>
                   </div>
                 )}
-
                 {parsed.grammar && (
                   <div style={card}>
-                    <p style={sectionLabel}>Грамматика</p>
+                    <p style={sectionLabel}>{t('result.grammar')}</p>
                     <p style={{ fontSize: '14px', color: 'var(--text)', lineHeight: '1.7' }}>{parsed.grammar}</p>
                   </div>
                 )}
-
                 {parsed.tip && (
                   <div style={card}>
-                    <p style={sectionLabel}>Совет</p>
+                    <p style={sectionLabel}>{t('result.tip')}</p>
                     <p style={{ fontSize: '14px', color: 'var(--text)', lineHeight: '1.7' }}>{parsed.tip}</p>
                   </div>
                 )}

@@ -16,6 +16,7 @@ import { api } from './utils/api'
 import { parseError } from './utils/errors'
 import { useSettings } from './hooks/useSettings'
 import { useTheme } from './hooks/useTheme'
+import Footer from './components/Footer'
 
 function App() {
   const [user, setUser] = useState(localStorage.getItem('lingua_username'))
@@ -215,7 +216,7 @@ function App() {
 
       {tab === 'saved' && <SavedList saved={saved} onRemove={handleRemoveSaved} />}
       {tab === 'history' && <HistoryList history={history} onSelect={handleSelectHistory} onClear={() => setHistory([])} />}
-
+      <Footer />
     </div>
   )
 }
