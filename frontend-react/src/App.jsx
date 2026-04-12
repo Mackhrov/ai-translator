@@ -108,7 +108,9 @@ function App() {
       await api.saveWord(text, translation, targetLang, mode)
       const updated = await api.getSaved()
       setSaved(updated)
-    } catch { /* empty */ }
+    } catch {(error)
+      console.error("Ошибка при сохранении слова:", error);
+    }
   }
 
   async function handleRemoveSaved(id) {
