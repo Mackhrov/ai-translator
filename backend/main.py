@@ -7,7 +7,7 @@ from typing import Optional
 import requests as req
 import os
 
-from database import SessionLocal, User, Saved, History, init_db
+from database import SessionLocal, User, Saved, History, DailyLimit, init_db
 from auth import hash_password, verify_password, create_token, decode_token
 
 app = FastAPI()
@@ -50,14 +50,24 @@ def get_current_user(authorization: Optional[str] = Header(None), db=Depends(get
         raise HTTPException(status_code=401, detail="Пользователь не найден")
     return user
 
-def check_limit(request: Request):
-    ip = request.client.host
+def check_limit(current_user, db):
     today = datetime.now().strftime("%Y-%m-%d")
-    if limits[ip]["date"] != today:
-        limits[ip] = {"count": 0, "date": today}
-    if limits[ip]["count"] >= DAILY_LIMIT:
+    record = db.query(DailyLimit).filter(DailyLimit.user_id == current_user.id).first()
+
+    if not record:
+        record = DailyLimit(user_id=current_user.id, count=0, date=today)
+        db.add(record)
+
+    if record.date != today:
+        record.count = 0
+        record.date = today
+
+    if record.count >= DAILY_LIMIT:
+        db.commit()
         raise HTTPException(status_code=429, detail="Лимит переводов исчерпан")
-    limits[ip]["count"] += 1
+
+    record.count += 1
+    db.commit()
 
 def call_groq(system: str, user: str) -> str:
     response = req.post(
@@ -133,17 +143,16 @@ def health_check():
     return {"status": "ok"}
 
 @app.get("/limit")
-def get_limit(request: Request):
-    ip = request.client.host
+def get_limit(current_user=Depends(get_current_user), db=Depends(get_db)):
     today = datetime.now().strftime("%Y-%m-%d")
-    if limits[ip]["date"] != today:
+    record = db.query(DailyLimit).filter(DailyLimit.user_id == current_user.id).first()
+    if not record or record.date != today:
         return {"used": 0, "total": DAILY_LIMIT, "remaining": DAILY_LIMIT}
-    used = limits[ip]["count"]
-    return {"used": used, "total": DAILY_LIMIT, "remaining": DAILY_LIMIT - used}
+    return {"used": record.count, "total": DAILY_LIMIT, "remaining": DAILY_LIMIT - record.count}
 
 @app.post("/translate")
 def translate(req_body: TranslateRequest, request: Request, current_user=Depends(get_current_user), db=Depends(get_db)):
-    check_limit(request)
+    check_limit(current_user, db)
     system = f"You are a professional translator. Translate text to {req_body.target_language}. Return only the translation, nothing else. No explanations."
     result = call_groq(system, req_body.text)
     entry = History(user_id=current_user.id, original=req_body.text, translation=result, target_lang=req_body.target_language, mode="simple")
@@ -153,26 +162,33 @@ def translate(req_body: TranslateRequest, request: Request, current_user=Depends
 
 @app.post("/translate/detailed")
 def translate_detailed(req_body: TranslateRequest, request: Request, current_user=Depends(get_current_user), db=Depends(get_db)):
-    check_limit(request)
+    check_limit(current_user, db)
 
     ui_lang = LANG_NAMES.get(req_body.ui_language[:2] if req_body.ui_language else 'en', 'English')
     sections = req_body.sections
 
-    system = f"You are a professional translator and language teacher. Always respond in {ui_lang} language only. Never switch languages.\n\n"
-    system += "LANGUAGE: [source language name]\n\nTRANSLATION:\n[translation]\n\n"
+    system = (
+        f"You are a professional translator and language teacher.\n"
+        f"IMPORTANT: Write ALL your explanations, labels and text ONLY in {ui_lang}.\n"
+        f"The translation itself should be in {req_body.target_language}.\n"
+        f"Never mix languages in your response.\n\n"
+        f"Use EXACTLY this format:\n\n"
+        f"LANGUAGE: [name of the source language in {ui_lang}]\n\n"
+        f"TRANSLATION:\n[translation in {req_body.target_language}]\n\n"
+    )
 
     if sections.get('variants', True):
-        system += "VARIANTS:\n- [variant 1]\n- [variant 2]\n- [variant 3]\n\n"
+        system += f"VARIANTS:\n- [variant 1 in {req_body.target_language}]\n- [variant 2 in {req_body.target_language}]\n- [variant 3 in {req_body.target_language}]\n\n"
     if sections.get('grammar', True):
-        system += "GRAMMAR:\n[grammar explanation]\n\n"
+        system += f"GRAMMAR:\n[grammar explanation in {ui_lang}]\n\n"
     if sections.get('tip', False):
-        system += "TIP:\n[usage tip]\n\n"
+        system += f"TIP:\n[usage tip in {ui_lang}]\n\n"
     if sections.get('formality', False):
-        system += "FORMALITY:\n[formal or conversational explanation]\n\n"
+        system += f"FORMALITY:\n[formality explanation in {ui_lang}]\n\n"
     if sections.get('transcription', False):
-        system += "TRANSCRIPTION:\n[pronunciation transcription]\n\n"
+        system += f"TRANSCRIPTION:\n[pronunciation of the {req_body.target_language} translation]\n\n"
 
-    user_msg = f"Translate to {req_body.target_language}:\n\n{req_body.text}"
+    user_msg = f"Translate this text to {req_body.target_language}:\n\n{req_body.text}"
     result = call_groq(system, user_msg)
     entry = History(user_id=current_user.id, original=req_body.text, translation=result, target_lang=req_body.target_language, mode="detailed")
     db.add(entry)

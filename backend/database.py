@@ -39,5 +39,13 @@ class History(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     user = relationship("User", back_populates="history")
 
+    class DailyLimit(Base):
+    __tablename__ = "daily_limits"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    count = Column(Integer, default=0)
+    date = Column(String, default="")
+    user = relationship("User")
+
 def init_db():
     Base.metadata.create_all(engine)

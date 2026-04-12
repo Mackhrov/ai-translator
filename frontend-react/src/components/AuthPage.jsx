@@ -93,46 +93,50 @@ function AuthPage({ onLogin }) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {tab === 'register' && (
-              <div>
-                <input placeholder={t('auth.username')} value={username} onChange={e => { setUsername(e.target.value); setErrors(p => ({...p, username: ''})) }}
-                  style={inputStyle(errors.username)}
-                  onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-                  onBlur={e => e.target.style.borderColor = errors.username ? 'var(--danger)' : 'var(--border)'}
-                />
-                {errMsg('username')}
-              </div>
-            )}
+  {tab === 'register' && (
+    <div>
+      <input placeholder={t('auth.username')} value={username}
+        onChange={e => { setUsername(e.target.value); setErrors(p => ({...p, username: ''})) }}
+        style={inputStyle(errors.username)}
+        onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+        onBlur={e => e.target.style.borderColor = errors.username ? 'var(--danger)' : 'var(--border)'}
+      />
+      {errMsg('username')}
+    </div>
+  )}
 
-            <div>
-              <input placeholder={t('auth.email')} type="email" value={email} onChange={e => { setEmail(e.target.value); setErrors(p => ({...p, email: ''})) }}
-                style={inputStyle(errors.email)}
-                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-                onBlur={e => e.target.style.borderColor = errors.email ? 'var(--danger)' : 'var(--border)'}
-              />
-              {errMsg('email')}
-            </div>
+  <div>
+    <input placeholder={t('auth.email')} type="email" value={email}
+      onChange={e => { setEmail(e.target.value); setErrors(p => ({...p, email: ''})) }}
+      style={inputStyle(errors.email)}
+      onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+      onBlur={e => e.target.style.borderColor = errors.email ? 'var(--danger)' : 'var(--border)'}
+    />
+    {errMsg('email')}
+  </div>
 
-            <div>
-              <input placeholder={t('auth.password')} type="password" value={password} onChange={e => { setPassword(e.target.value); setErrors(p => ({...p, password: ''})) }}
-                style={inputStyle(errors.password)}
-                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-                onBlur={e => e.target.style.borderColor = errors.password ? 'var(--danger)' : 'var(--border)'}
-              />
-              {errMsg('password')}
-            </div>
+  <div>
+    <input placeholder={t('auth.password')} type="password" value={password}
+      onChange={e => { setPassword(e.target.value); setErrors(p => ({...p, password: ''})) }}
+      onKeyDown={e => e.key === 'Enter' && !confirmPassword && handleSubmit()}
+      style={inputStyle(errors.password)}
+      onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+      onBlur={e => e.target.style.borderColor = errors.password ? 'var(--danger)' : 'var(--border)'}
+    />
+    {errMsg('password')}
+  </div>
 
-            {tab === 'register' && (
-              <div>
-                <input placeholder="Повтори пароль" type="password" value={confirmPassword}
-                  onChange={e => { setConfirmPassword(e.target.value); setErrors(p => ({...p, confirmPassword: ''})) }}
-                  onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                  style={inputStyle(errors.confirmPassword)}
-                  onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-                  onBlur={e => e.target.style.borderColor = errors.confirmPassword ? 'var(--danger)' : 'var(--border)'}
-                />
-                {errMsg('confirmPassword')}
-              </div>
+  {tab === 'register' && (
+    <div>
+      <input placeholder="Повтори пароль" type="password" value={confirmPassword}
+        onChange={e => { setConfirmPassword(e.target.value); setErrors(p => ({...p, confirmPassword: ''})) }}
+        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+        style={inputStyle(errors.confirmPassword)}
+        onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+        onBlur={e => e.target.style.borderColor = errors.confirmPassword ? 'var(--danger)' : 'var(--border)'}
+      />
+      {errMsg('confirmPassword')}
+    </div>
             )}
 
             {tab === 'login' && (

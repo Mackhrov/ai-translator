@@ -6,7 +6,11 @@ function LimitBar() {
   const { t } = useTranslation()
 
   useEffect(() => {
-    fetch('https://ai-translator-production-d1ee.up.railway.app/limit')
+    const token = localStorage.getItem('lingua_token')
+    if (!token) return
+    fetch('https://ai-translator-production-d1ee.up.railway.app/limit', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(r => r.json())
       .then(setLimit)
       .catch(() => {})
