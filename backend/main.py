@@ -28,6 +28,11 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 DAILY_LIMIT = 10
 limits = defaultdict(lambda: {"count": 0, "date": ""})
 
+LANG_NAMES = {
+    'ru': 'Russian', 'en': 'English', 'de': 'German',
+    'uk': 'Ukrainian', 'es': 'Spanish', 'zh': 'Chinese', 'fr': 'French'
+}
+
 def get_db():
     db = SessionLocal()
     try:
@@ -70,8 +75,6 @@ def call_groq(system: str, user: str) -> str:
     data = response.json()
     return data["choices"][0]["message"]["content"]
 
-# --- Модели запросов ---
-
 class RegisterRequest(BaseModel):
     username: str
     email: str
@@ -86,21 +89,13 @@ class TranslateRequest(BaseModel):
     target_language: str = "English"
     source_language: str = "auto"
     sections: dict = {}
-    ui_language: str = "Russian"
+    ui_language: str = "en"
 
 class SaveRequest(BaseModel):
     original: str
     translation: str
     target_lang: str
     mode: str
-
-lang_names = {
-    'ru': 'Russian', 'en': 'English', 'de': 'German',
-    'uk': 'Ukrainian', 'es': 'Spanish', 'zh': 'Chinese',
-    'fr': 'French'
-}
-ui_lang = lang_names.get(req_body.ui_language[:2] if req_body.ui_language else 'en', 'English')
-# --- Auth endpoints ---
 
 @app.post("/register")
 def register(req_body: RegisterRequest, db=Depends(get_db)):
@@ -133,8 +128,6 @@ def login(req_body: LoginRequest, db=Depends(get_db)):
 def me(current_user=Depends(get_current_user)):
     return {"username": current_user.username, "email": current_user.email}
 
-# --- Translate endpoints ---
-
 @app.get("/")
 def health_check():
     return {"status": "ok"}
@@ -151,7 +144,7 @@ def get_limit(request: Request):
 @app.post("/translate")
 def translate(req_body: TranslateRequest, request: Request, current_user=Depends(get_current_user), db=Depends(get_db)):
     check_limit(request)
-    system = f"You are a professional translator. Translate text to {req_body.target_language}. Return only the translation, nothing else."
+    system = f"You are a professional translator. Translate text to {req_body.target_language}. Return only the translation, nothing else. No explanations."
     result = call_groq(system, req_body.text)
     entry = History(user_id=current_user.id, original=req_body.text, translation=result, target_lang=req_body.target_language, mode="simple")
     db.add(entry)
@@ -162,11 +155,10 @@ def translate(req_body: TranslateRequest, request: Request, current_user=Depends
 def translate_detailed(req_body: TranslateRequest, request: Request, current_user=Depends(get_current_user), db=Depends(get_db)):
     check_limit(request)
 
-    ui_lang = req_body.ui_language if hasattr(req_body, 'ui_language') else 'Russian'
+    ui_lang = LANG_NAMES.get(req_body.ui_language[:2] if req_body.ui_language else 'en', 'English')
+    sections = req_body.sections
 
-    sections = req_body.sections if hasattr(req_body, 'sections') else {}
-
-    system = f"You are a professional translator. Always respond in {ui_lang} language only.\n\n"
+    system = f"You are a professional translator and language teacher. Always respond in {ui_lang} language only. Never switch languages.\n\n"
     system += "LANGUAGE: [source language name]\n\nTRANSLATION:\n[translation]\n\n"
 
     if sections.get('variants', True):
@@ -187,14 +179,22 @@ def translate_detailed(req_body: TranslateRequest, request: Request, current_use
     db.commit()
     return {"translation": result}
 
-# --- Словарь endpoints ---
-
 @app.post("/saved")
 def save_word(req_body: SaveRequest, current_user=Depends(get_current_user), db=Depends(get_db)):
-    already = db.query(Saved).filter(Saved.user_id == current_user.id, Saved.original == req_body.original, Saved.target_lang == req_body.target_lang).first()
+    already = db.query(Saved).filter(
+        Saved.user_id == current_user.id,
+        Saved.original == req_body.original,
+        Saved.target_lang == req_body.target_lang
+    ).first()
     if already:
         raise HTTPException(status_code=400, detail="Уже сохранено")
-    item = Saved(user_id=current_user.id, original=req_body.original, translation=req_body.translation, target_lang=req_body.target_lang, mode=req_body.mode)
+    item = Saved(
+        user_id=current_user.id,
+        original=req_body.original,
+        translation=req_body.translation,
+        target_lang=req_body.target_lang,
+        mode=req_body.mode
+    )
     db.add(item)
     db.commit()
     return {"ok": True}
