@@ -10,10 +10,12 @@ import ErrorBox from './components/ErrorBox'
 import SavedList from './components/SavedList'
 import LimitBar from './components/LimitBar'
 import AISettings from './components/AISettings'
-import LanguageSwitcher from './components/LanguageSwitcher'
+import GlobePicker from './components/GlobePicker'
+import UserMenu from './components/UserMenu'
 import { api } from './utils/api'
 import { parseError } from './utils/errors'
 import { useSettings } from './hooks/useSettings'
+import { useTheme } from './hooks/useTheme'
 
 function App() {
   const [user, setUser] = useState(localStorage.getItem('lingua_username'))
@@ -30,8 +32,8 @@ function App() {
   const [translateCount, setTranslateCount] = useState(0)
   const [showSettings, setShowSettings] = useState(false)
   const { settings, toggle } = useSettings()
+  const { theme, toggleTheme } = useTheme()
   const { t, i18n } = useTranslation()
-  
 
   useEffect(() => {
     if (user) {
@@ -61,14 +63,9 @@ function App() {
     setError('')
   }
 
-  function getAutoMode(textLength) {
-    if (textLength <= 300) return 'detailed'
-    return 'simple'
-  }
-
   async function handleTranslate(overrideText) {
     const inputText = overrideText || text
-    if (!inputText.trim()) return
+    if (!inputText?.trim()) return
     if (sourceLang !== 'auto' && sourceLang === targetLang) {
       setError(t('translator.differentLangs'))
       return
@@ -76,7 +73,7 @@ function App() {
 
     const effectiveMode = overrideText
       ? 'detailed'
-      : (mode === 'simple' ? 'simple' : getAutoMode(inputText.length))
+      : (mode === 'simple' ? 'simple' : (inputText.length <= 300 ? 'detailed' : 'simple'))
 
     setLoading(true)
     setError('')
@@ -110,9 +107,7 @@ function App() {
       await api.saveWord(text, translation, targetLang, mode)
       const updated = await api.getSaved()
       setSaved(updated)
-    } catch (err) {
-      setError(parseError(err, err.message?.includes('429') ? 429 : null))
-    }
+    } catch { /* empty */ }
   }
 
   async function handleRemoveSaved(id) {
@@ -135,7 +130,7 @@ function App() {
       style={{
         flex: 1, padding: '10px', background: 'transparent', border: 'none',
         borderBottom: `2px solid ${tab === value ? 'var(--accent)' : 'transparent'}`,
-        color: tab === value ? 'var(--accent)' : 'var(--text-muted)',
+        color: tab === value ? 'var(--accent)' : 'var(--text3)',
         fontSize: '13px', fontWeight: tab === value ? '600' : '400',
         cursor: 'pointer', transition: 'all .15s',
       }}
@@ -144,28 +139,29 @@ function App() {
     </button>
   )
 
-  return (
-    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '40px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+  const card = {
+    background: 'var(--bg2)',
+    borderRadius: '18px',
+    padding: '22px',
+    border: '1px solid var(--border)',
+  }
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-        <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)', letterSpacing: '3px', textTransform: 'uppercase' }}>
+  return (
+    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '32px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent)', letterSpacing: '4px', textTransform: 'uppercase' }}>
           {t('appName')}
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <LanguageSwitcher />
-          <button
-            onClick={() => setShowSettings(s => !s)}
-            style={{ fontSize: '12px', padding: '5px 14px', border: `1px solid ${showSettings ? 'var(--accent)' : 'var(--border)'}`, borderRadius: '100px', background: showSettings ? 'var(--accent-dim)' : 'transparent', color: showSettings ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer' }}
-          >
-            {t('settings.aiSettings')}
-          </button>
-          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{user}</span>
-          <button
-            onClick={handleLogout}
-            style={{ fontSize: '12px', padding: '5px 14px', border: '1px solid var(--border)', borderRadius: '100px', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
-          >
-            {t('user.logout')}
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <GlobePicker />
+          <UserMenu
+            username={user}
+            onLogout={handleLogout}
+            onSettings={() => setShowSettings(s => !s)}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+          />
         </div>
       </div>
 
@@ -183,7 +179,7 @@ function App() {
 
       {tab === 'translate' && (
         <>
-          <div style={{ background: 'var(--bg2)', borderRadius: '20px', padding: '24px', border: '1px solid var(--border)' }}>
+          <div style={card}>
             <LanguageSelector
               sourceLang={sourceLang}
               targetLang={targetLang}
@@ -193,7 +189,7 @@ function App() {
             <ModeToggle mode={mode} onModeChange={handleModeChange} />
 
             {text.length > 300 && mode === 'detailed' && (
-              <div style={{ marginBottom: '12px', padding: '10px 14px', background: '#1e1a0a', border: '1px solid #4a3a0a', borderRadius: '12px', fontSize: '13px', color: '#f0c060' }}>
+              <div style={{ marginBottom: '12px', padding: '10px 14px', background: 'var(--bg4)', border: '1px solid var(--warn)', borderRadius: '12px', fontSize: '13px', color: 'var(--warn)' }}>
                 {t('translator.tooLong')}
               </div>
             )}
@@ -217,13 +213,8 @@ function App() {
         </>
       )}
 
-      {tab === 'saved' && (
-        <SavedList saved={saved} onRemove={handleRemoveSaved} />
-      )}
-
-      {tab === 'history' && (
-        <HistoryList history={history} onSelect={handleSelectHistory} onClear={() => setHistory([])} />
-      )}
+      {tab === 'saved' && <SavedList saved={saved} onRemove={handleRemoveSaved} />}
+      {tab === 'history' && <HistoryList history={history} onSelect={handleSelectHistory} onClear={() => setHistory([])} />}
 
     </div>
   )

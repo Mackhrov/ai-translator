@@ -39,17 +39,17 @@
       "differentLangs": "Please select different languages"
     },
     "result": {
-      "translation": "Translation",
-      "variants": "Variants",
-      "grammar": "Grammar",
-      "tip": "Tip",
-      "formality": "Formality",
-      "transcription": "Transcription",
-      "copy": "Copy",
-      "saveToDict": "+ Save",
-      "detectedLang": "Language: {{lang}}",
-      "analyzeSelection": "AI analysis →"
-    },
+  "translation": "Translation",
+  "variants": "Variants",
+  "grammar": "Grammar",
+  "tip": "Tip",
+  "formality": "Formality",
+  "transcription": "Transcription",
+  "copy": "Copy",
+  "saveToDict": "+ Save",
+  "detectedLang": "Language: {{lang}}",
+  "analyzeSelection": "AI analysis of selection →"
+},
     "settings": {
       "title": "AI Analysis Settings",
       "aiSettings": "AI settings",

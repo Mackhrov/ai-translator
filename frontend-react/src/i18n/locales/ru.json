@@ -39,17 +39,17 @@
       "differentLangs": "Выбери разные языки для перевода"
     },
     "result": {
-      "translation": "Перевод",
-      "variants": "Варианты",
-      "grammar": "Грамматика",
-      "tip": "Совет",
-      "formality": "Формальность",
-      "transcription": "Транскрипция",
-      "copy": "Копировать",
-      "saveToDict": "+ В словарь",
-      "detectedLang": "Язык: {{lang}}",
-      "analyzeSelection": "AI-разбор выделенного →"
-    },
+  "translation": "Перевод",
+  "variants": "Варианты",
+  "grammar": "Грамматика",
+  "tip": "Совет",
+  "formality": "Формальность",
+  "transcription": "Транскрипция",
+  "copy": "Копировать",
+  "saveToDict": "+ В словарь",
+  "detectedLang": "Язык: {{lang}}",
+  "analyzeSelection": "AI-разбор выделенного →"
+},
     "settings": {
       "title": "Настройки AI-разбора",
       "aiSettings": "AI настройки",
