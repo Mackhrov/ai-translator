@@ -40,8 +40,7 @@ function TranslateBox({ text, onChange, onTranslate, loading }) {
         </span>
       </div>
 
-      <button
-        onClick={onTranslate}
+      <button onClick={() => onTranslate()}
         disabled={loading || !text.trim()}
         style={{
           width: '100%',
