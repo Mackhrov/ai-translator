@@ -1,29 +1,46 @@
 import { useRef } from 'react'
 import SelectionAnalyzer from './SelectionAnalyzer'
+import { useTranslation } from 'react-i18next'
 
 function ResultBox({ translation, mode, onSave, onAnalyzeSelection, settings }) {
   const containerRef = useRef(null)
+  const { t } = useTranslation()
+  
 
   if (!translation) return null
 
   function parseDetailed(raw) {
-    const s = { lang: '', translation: '', variants: [], grammar: '', tip: '', formality: '', transcription: '' }
-    const langM = raw.match(/ЯЗЫК:\s*(.+)/i)
-    if (langM) s.lang = langM[1].trim()
-    const transM = raw.match(/ПЕРЕВОД:\s*([\s\S]*?)(?=ВАРИАНТЫ:|ГРАММАТИКА:|СОВЕТ:|ФОРМАЛЬНОСТЬ:|ТРАНСКРИПЦИЯ:|$)/i)
-    if (transM) s.translation = transM[1].trim()
-    const varM = raw.match(/ВАРИАНТЫ:\s*([\s\S]*?)(?=ГРАММАТИКА:|СОВЕТ:|ФОРМАЛЬНОСТЬ:|ТРАНСКРИПЦИЯ:|$)/i)
-    if (varM) s.variants = varM[1].split('\n').map(l => l.replace(/^-\s*/, '').trim()).filter(Boolean)
-    const gramM = raw.match(/ГРАММАТИКА:\s*([\s\S]*?)(?=СОВЕТ:|ФОРМАЛЬНОСТЬ:|ТРАНСКРИПЦИЯ:|$)/i)
-    if (gramM) s.grammar = gramM[1].trim()
-    const tipM = raw.match(/СОВЕТ:\s*([\s\S]*?)(?=ФОРМАЛЬНОСТЬ:|ТРАНСКРИПЦИЯ:|$)/i)
-    if (tipM) s.tip = tipM[1].trim()
-    const formM = raw.match(/ФОРМАЛЬНОСТЬ:\s*([\s\S]*?)(?=ТРАНСКРИПЦИЯ:|$)/i)
-    if (formM) s.formality = formM[1].trim()
-    const transcrM = raw.match(/ТРАНСКРИПЦИЯ:\s*([\s\S]*?)$/i)
-    if (transcrM) s.transcription = transcrM[1].trim()
-    return s
-  }
+  const s = { lang: '', translation: '', variants: [], grammar: '', tip: '', formality: '', transcription: '' }
+
+  const langM = raw.match(/LANGUAGE:\s*(.+)/i) || raw.match(/ЯЗЫК:\s*(.+)/i)
+  if (langM) s.lang = langM[1].trim()
+
+  const transM = raw.match(/TRANSLATION:\s*([\s\S]*?)(?=VARIANTS:|GRAMMAR:|TIP:|FORMALITY:|TRANSCRIPTION:|ПЕРЕВОД:|ВАРИАНТЫ:|$)/i)
+    || raw.match(/ПЕРЕВОД:\s*([\s\S]*?)(?=ВАРИАНТЫ:|ГРАММАТИКА:|СОВЕТ:|$)/i)
+  if (transM) s.translation = transM[1].trim()
+
+  const varM = raw.match(/VARIANTS:\s*([\s\S]*?)(?=GRAMMAR:|TIP:|FORMALITY:|TRANSCRIPTION:|$)/i)
+    || raw.match(/ВАРИАНТЫ:\s*([\s\S]*?)(?=ГРАММАТИКА:|СОВЕТ:|$)/i)
+  if (varM) s.variants = varM[1].split('\n').map(l => l.replace(/^-\s*/, '').trim()).filter(Boolean)
+
+  const gramM = raw.match(/GRAMMAR:\s*([\s\S]*?)(?=TIP:|FORMALITY:|TRANSCRIPTION:|$)/i)
+    || raw.match(/ГРАММАТИКА:\s*([\s\S]*?)(?=СОВЕТ:|$)/i)
+  if (gramM) s.grammar = gramM[1].trim()
+
+  const tipM = raw.match(/TIP:\s*([\s\S]*?)(?=FORMALITY:|TRANSCRIPTION:|$)/i)
+    || raw.match(/СОВЕТ:\s*([\s\S]*?)(?=ФОРМАЛЬНОСТЬ:|$)/i)
+  if (tipM) s.tip = tipM[1].trim()
+
+  const formM = raw.match(/FORMALITY:\s*([\s\S]*?)(?=TRANSCRIPTION:|$)/i)
+    || raw.match(/ФОРМАЛЬНОСТЬ:\s*([\s\S]*?)(?=ТРАНСКРИПЦИЯ:|$)/i)
+  if (formM) s.formality = formM[1].trim()
+
+  const transcrM = raw.match(/TRANSCRIPTION:\s*([\s\S]*?)$/i)
+    || raw.match(/ТРАНСКРИПЦИЯ:\s*([\s\S]*?)$/i)
+  if (transcrM) s.transcription = transcrM[1].trim()
+
+  return s
+}
 
   function copy(text) { navigator.clipboard.writeText(text) }
 
@@ -46,8 +63,8 @@ function ResultBox({ translation, mode, onSave, onAnalyzeSelection, settings }) 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <span style={sectionLabel}>Перевод</span>
           <div style={{ display: 'flex', gap: '8px' }}>
-            {iconBtn(() => copy(translation), 'Копировать')}
-            {iconBtn(onSave, '+ В словарь', true)}
+            {iconBtn(() => copy(translation), t('result.copy'))}
+            {iconBtn(onSave, t('result.saveToDict'), true)}
           </div>
         </div>
         <p style={{ fontSize: '20px', color: 'var(--text)', lineHeight: '1.5', fontWeight: '500' }}>{translation}</p>

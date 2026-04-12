@@ -44,7 +44,11 @@ export const api = {
     if (!r.ok) throw new Error(data.detail)
     return data
   },
-async translateDetailed(text, targetLang, sourceLang, settings = {}) {
+async translateDetailed(text, targetLang, sourceLang, settings = {}, uiLang = 'Russian') {
+  const langMap = {
+    ru: 'Russian', en: 'English', de: 'German',
+    uk: 'Ukrainian', es: 'Spanish', zh: 'Chinese'
+  }
   const r = await fetch(`${BASE}/translate/detailed`, {
     method: 'POST',
     headers: authHeaders(),
@@ -52,6 +56,7 @@ async translateDetailed(text, targetLang, sourceLang, settings = {}) {
       text,
       target_language: targetLang,
       source_language: sourceLang,
+      ui_language: langMap[uiLang] || 'English',
       sections: {
         variants: settings.showVariants ?? true,
         grammar: settings.showGrammar ?? true,

@@ -86,6 +86,7 @@ class TranslateRequest(BaseModel):
     target_language: str = "English"
     source_language: str = "auto"
     sections: dict = {}
+    ui_language: str = "Russian"
 
 class SaveRequest(BaseModel):
     original: str
@@ -155,23 +156,25 @@ def translate(req_body: TranslateRequest, request: Request, current_user=Depends
 def translate_detailed(req_body: TranslateRequest, request: Request, current_user=Depends(get_current_user), db=Depends(get_db)):
     check_limit(request)
 
+    ui_lang = req_body.ui_language if hasattr(req_body, 'ui_language') else 'Russian'
+
     sections = req_body.sections if hasattr(req_body, 'sections') else {}
 
-    system = "Ты профессиональный переводчик. Отвечай ТОЛЬКО на русском языке.\n\n"
-    system += "ЯЗЫК: [язык оригинала]\n\nПЕРЕВОД:\n[перевод]\n\n"
+    system = f"You are a professional translator. Always respond in {ui_lang} language only.\n\n"
+    system += "LANGUAGE: [source language name]\n\nTRANSLATION:\n[translation]\n\n"
 
     if sections.get('variants', True):
-        system += "ВАРИАНТЫ:\n- [вариант 1]\n- [вариант 2]\n- [вариант 3]\n\n"
+        system += "VARIANTS:\n- [variant 1]\n- [variant 2]\n- [variant 3]\n\n"
     if sections.get('grammar', True):
-        system += "ГРАММАТИКА:\n[объяснение]\n\n"
+        system += "GRAMMAR:\n[grammar explanation]\n\n"
     if sections.get('tip', False):
-        system += "СОВЕТ:\n[совет по использованию]\n\n"
+        system += "TIP:\n[usage tip]\n\n"
     if sections.get('formality', False):
-        system += "ФОРМАЛЬНОСТЬ:\n[формальный или разговорный, объяснение]\n\n"
+        system += "FORMALITY:\n[formal or conversational explanation]\n\n"
     if sections.get('transcription', False):
-        system += "ТРАНСКРИПЦИЯ:\n[транскрипция произношения]\n\n"
+        system += "TRANSCRIPTION:\n[pronunciation transcription]\n\n"
 
-    user_msg = f"Переведи на {req_body.target_language}:\n\n{req_body.text}"
+    user_msg = f"Translate to {req_body.target_language}:\n\n{req_body.text}"
     result = call_groq(system, user_msg)
     entry = History(user_id=current_user.id, original=req_body.text, translation=result, target_lang=req_body.target_language, mode="detailed")
     db.add(entry)

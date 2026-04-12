@@ -30,7 +30,8 @@ function App() {
   const [translateCount, setTranslateCount] = useState(0)
   const [showSettings, setShowSettings] = useState(false)
   const { settings, toggle } = useSettings()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  
 
   useEffect(() => {
     if (user) {
@@ -84,7 +85,7 @@ function App() {
     try {
       let data
       if (effectiveMode === 'detailed') {
-        data = await api.translateDetailed(inputText, targetLang, sourceLang, settings)
+        data = await api.translateDetailed(inputText, targetLang, sourceLang, settings, i18n.language)
       } else {
         data = await api.translate(inputText, targetLang, sourceLang)
       }

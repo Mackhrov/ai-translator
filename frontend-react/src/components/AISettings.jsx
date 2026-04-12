@@ -1,20 +1,9 @@
+import { useTranslation } from 'react-i18next'
+
 function Toggle({ on, onToggle }) {
   return (
-    <div
-      onClick={onToggle}
-      style={{
-        width: '36px', height: '20px', borderRadius: '10px',
-        background: on ? 'var(--accent)' : 'var(--bg)',
-        border: `1px solid ${on ? 'var(--accent)' : 'var(--border)'}`,
-        cursor: 'pointer', position: 'relative',
-        transition: 'all .2s', flexShrink: 0,
-      }}
-    >
-      <div style={{
-        width: '14px', height: '14px', borderRadius: '50%',
-        background: 'white', position: 'absolute', top: '2px',
-        left: on ? '18px' : '2px', transition: 'left .2s',
-      }}/>
+    <div onClick={onToggle} style={{ width: '36px', height: '20px', borderRadius: '10px', background: on ? 'var(--accent)' : 'var(--bg)', border: `1px solid ${on ? 'var(--accent)' : 'var(--border)'}`, cursor: 'pointer', position: 'relative', transition: 'all .2s', flexShrink: 0 }}>
+      <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2px', left: on ? '18px' : '2px', transition: 'left .2s' }}/>
     </div>
   )
 }
@@ -32,38 +21,36 @@ function Row({ label, desc, on, onToggle }) {
 }
 
 function AISettings({ settings, toggle, onClose }) {
+  const { t } = useTranslation()
+
   return (
     <div style={{ background: 'var(--bg2)', borderRadius: '20px', padding: '24px', border: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <span style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          Настройки AI-разбора
+          {t('settings.title')}
         </span>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '18px', lineHeight: 1 }}>×</button>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '18px' }}>×</button>
       </div>
 
       <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginBottom: '12px' }}>
-        Что включать в AI-разбор:
+        {t('settings.include')}
       </div>
 
-      <div>
-        <Row label="Варианты перевода" desc="3 альтернативных формулировки" on={settings.showVariants} onToggle={() => toggle('showVariants')} />
-        <Row label="Грамматика" desc="Время, структура, части речи" on={settings.showGrammar} onToggle={() => toggle('showGrammar')} />
-        <Row label="Совет по использованию" desc="Когда и как применять фразу" on={settings.showTip} onToggle={() => toggle('showTip')} />
-        <Row label="Формальность" desc="Формальный или разговорный стиль" on={settings.showFormality} onToggle={() => toggle('showFormality')} />
-        <div style={{ borderBottom: 'none' }}>
-          <Row label="Транскрипция" desc="Произношение на любом языке" on={settings.showTranscription} onToggle={() => toggle('showTranscription')} />
-        </div>
-      </div>
+      <Row label={t('settings.toggles.variants')} desc={t('settings.toggles.variantsDesc')} on={settings.showVariants} onToggle={() => toggle('showVariants')} />
+      <Row label={t('settings.toggles.grammar')} desc={t('settings.toggles.grammarDesc')} on={settings.showGrammar} onToggle={() => toggle('showGrammar')} />
+      <Row label={t('settings.toggles.tip')} desc={t('settings.toggles.tipDesc')} on={settings.showTip} onToggle={() => toggle('showTip')} />
+      <Row label={t('settings.toggles.formality')} desc={t('settings.toggles.formalityDesc')} on={settings.showFormality} onToggle={() => toggle('showFormality')} />
+      <Row label={t('settings.toggles.transcription')} desc={t('settings.toggles.transcriptionDesc')} on={settings.showTranscription} onToggle={() => toggle('showTranscription')} />
 
       <div style={{ marginTop: '20px', padding: '12px 16px', background: 'var(--bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
         <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          Логика по длине
+          {t('settings.lengthLogic')}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {[
-            ['до 50 символов', 'Полный AI-разбор автоматически'],
-            ['50 – 300 символов', 'Перевод + выбранные секции'],
-            ['300+ символов', 'Только перевод, можно выделить часть'],
+            [t('settings.lengths.short'), t('settings.lengthDescs.short')],
+            [t('settings.lengths.medium'), t('settings.lengthDescs.medium')],
+            [t('settings.lengths.long'), t('settings.lengthDescs.long')],
           ].map(([len, desc]) => (
             <div key={len} style={{ display: 'flex', gap: '12px', alignItems: 'baseline' }}>
               <span style={{ fontSize: '12px', color: 'var(--accent)', minWidth: '130px', flexShrink: 0 }}>{len}</span>
