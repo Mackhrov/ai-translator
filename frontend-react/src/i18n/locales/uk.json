@@ -1,0 +1,53 @@
+{
+  "translation": {
+    "appName": "Lingua",
+    "tabs": { "translator": "Перекладач", "saved": "Словник", "history": "Історія" },
+    "auth": {
+      "login": "Увійти", "register": "Реєстрація",
+      "email": "Email", "password": "Пароль", "username": "Ім'я користувача",
+      "loginBtn": "Увійти →", "registerBtn": "Створити акаунт →",
+      "loading": "Завантаження...", "loginSubtitle": "Увійди до свого акаунту",
+      "registerSubtitle": "Створи акаунт",
+      "errors": { "usernameRequired": "Введи ім'я користувача", "passwordShort": "Пароль мінімум 6 символів" }
+    },
+    "translator": {
+      "from": "Звідки", "to": "Куди", "auto": "Авто",
+      "textPlaceholder": "Введи текст...", "translate": "Перекласти", "translating": "Перекладаємо...",
+      "mode": { "label": "Режим", "simple": "Швидкий", "detailed": "AI-розбір" },
+      "counter": "{{count}} / {{max}}",
+      "tooLong": "Текст задовгий для AI-розбору. Виділи потрібний фрагмент.",
+      "differentLangs": "Вибери різні мови для перекладу"
+    },
+    "result": {
+      "translation": "Переклад", "variants": "Варіанти", "grammar": "Граматика",
+      "tip": "Порада", "formality": "Формальність", "transcription": "Транскрипція",
+      "copy": "Копіювати", "saveToDict": "+ До словника",
+      "detectedLang": "Мова: {{lang}}", "analyzeSelection": "AI-розбір виділеного →"
+    },
+    "settings": {
+      "title": "Налаштування AI-розбору", "aiSettings": "AI налаштування",
+      "include": "Що включати в AI-розбір:",
+      "lengthLogic": "Логіка за довжиною",
+      "lengths": { "short": "до 50 символів", "medium": "50 – 300 символів", "long": "300+ символів" },
+      "lengthDescs": { "short": "Повний AI-розбір автоматично", "medium": "Переклад + вибрані секції", "long": "Тільки переклад, виділи частину" },
+      "toggles": {
+        "variants": "Варіанти перекладу", "variantsDesc": "3 альтернативних формулювання",
+        "grammar": "Граматика", "grammarDesc": "Час, структура, частини мови",
+        "tip": "Порада щодо використання", "tipDesc": "Коли і як застосовувати фразу",
+        "formality": "Формальність", "formalityDesc": "Формальний або розмовний стиль",
+        "transcription": "Транскрипція", "transcriptionDesc": "Вимова будь-якою мовою"
+      }
+    },
+    "saved": { "empty": "Словник порожній — натисни \"+ До словника\" після перекладу", "count": "Словник — {{count}}" },
+    "history": { "clear": "Очистити" },
+    "limit": { "remaining": "{{remaining}} / {{total}} перекладів" },
+    "errors": {
+      "noInternet": "Немає підключення до інтернету", "serverDown": "Не вдалося підключитися до сервера",
+      "rateLimit": "Ліміт перекладів на сьогодні вичерпано!", "serverError": "Помилка на сервері",
+      "noCredits": "Закінчилися кредити API", "unknown": "Щось пішло не так",
+      "emptyResponse": "Сервер повернув порожню відповідь", "retry": "Повторити"
+    },
+    "user": { "logout": "Вийти" },
+    "languages": { "auto": "Авто", "Russian": "Російська", "English": "Англійська", "German": "Німецька", "French": "Французька", "Spanish": "Іспанська", "Chinese": "Китайська", "Ukrainian": "Українська" }
+  }
+}

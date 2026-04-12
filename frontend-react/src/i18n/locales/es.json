@@ -1,0 +1,53 @@
+{
+  "translation": {
+    "appName": "Lingua",
+    "tabs": { "translator": "Traductor", "saved": "Diccionario", "history": "Historial" },
+    "auth": {
+      "login": "Iniciar sesión", "register": "Registrarse",
+      "email": "Email", "password": "Contraseña", "username": "Nombre de usuario",
+      "loginBtn": "Iniciar sesión →", "registerBtn": "Crear cuenta →",
+      "loading": "Cargando...", "loginSubtitle": "Inicia sesión en tu cuenta",
+      "registerSubtitle": "Crea una cuenta",
+      "errors": { "usernameRequired": "Introduce un nombre de usuario", "passwordShort": "La contraseña debe tener al menos 6 caracteres" }
+    },
+    "translator": {
+      "from": "De", "to": "A", "auto": "Auto",
+      "textPlaceholder": "Introduce texto...", "translate": "Traducir", "translating": "Traduciendo...",
+      "mode": { "label": "Modo", "simple": "Rápido", "detailed": "Análisis IA" },
+      "counter": "{{count}} / {{max}}",
+      "tooLong": "Texto demasiado largo para análisis IA. Selecciona un fragmento.",
+      "differentLangs": "Selecciona idiomas diferentes"
+    },
+    "result": {
+      "translation": "Traducción", "variants": "Variantes", "grammar": "Gramática",
+      "tip": "Consejo", "formality": "Formalidad", "transcription": "Transcripción",
+      "copy": "Copiar", "saveToDict": "+ Guardar",
+      "detectedLang": "Idioma: {{lang}}", "analyzeSelection": "Análisis IA →"
+    },
+    "settings": {
+      "title": "Configuración del análisis IA", "aiSettings": "Configuración IA",
+      "include": "Incluir en el análisis IA:",
+      "lengthLogic": "Lógica por longitud",
+      "lengths": { "short": "hasta 50 caracteres", "medium": "50 – 300 caracteres", "long": "más de 300 caracteres" },
+      "lengthDescs": { "short": "Análisis IA completo automáticamente", "medium": "Traducción + secciones seleccionadas", "long": "Solo traducción, selecciona fragmento" },
+      "toggles": {
+        "variants": "Variantes de traducción", "variantsDesc": "3 formulaciones alternativas",
+        "grammar": "Gramática", "grammarDesc": "Tiempo, estructura, partes del discurso",
+        "tip": "Consejo de uso", "tipDesc": "Cuándo y cómo usar la frase",
+        "formality": "Formalidad", "formalityDesc": "Estilo formal o coloquial",
+        "transcription": "Transcripción", "transcriptionDesc": "Pronunciación en cualquier idioma"
+      }
+    },
+    "saved": { "empty": "Diccionario vacío — pulsa \"+ Guardar\" tras traducir", "count": "Diccionario — {{count}}" },
+    "history": { "clear": "Limpiar" },
+    "limit": { "remaining": "{{remaining}} / {{total}} traducciones" },
+    "errors": {
+      "noInternet": "Sin conexión a internet", "serverDown": "No se pudo conectar al servidor",
+      "rateLimit": "¡Límite diario alcanzado!", "serverError": "Error del servidor",
+      "noCredits": "Créditos API agotados", "unknown": "Algo salió mal",
+      "emptyResponse": "Respuesta vacía del servidor", "retry": "Reintentar"
+    },
+    "user": { "logout": "Cerrar sesión" },
+    "languages": { "auto": "Auto", "Russian": "Ruso", "English": "Inglés", "German": "Alemán", "French": "Francés", "Spanish": "Español", "Chinese": "Chino", "Ukrainian": "Ucraniano" }
+  }
+}

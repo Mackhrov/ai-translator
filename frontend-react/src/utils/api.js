@@ -44,17 +44,27 @@ export const api = {
     if (!r.ok) throw new Error(data.detail)
     return data
   },
-
-  async translateDetailed(text, targetLang, sourceLang) {
-    const r = await fetch(`${BASE}/translate/detailed`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ text, target_language: targetLang, source_language: sourceLang })
+async translateDetailed(text, targetLang, sourceLang, settings = {}) {
+  const r = await fetch(`${BASE}/translate/detailed`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      text,
+      target_language: targetLang,
+      source_language: sourceLang,
+      sections: {
+        variants: settings.showVariants ?? true,
+        grammar: settings.showGrammar ?? true,
+        tip: settings.showTip ?? false,
+        formality: settings.showFormality ?? false,
+        transcription: settings.showTranscription ?? false,
+      }
     })
-    const data = await r.json()
-    if (!r.ok) throw new Error(data.detail)
-    return data
-  },
+  })
+  const data = await r.json()
+  if (!r.ok) throw new Error(data.detail)
+  return data
+},
 
   async getSaved() {
     const r = await fetch(`${BASE}/saved`, { headers: authHeaders() })

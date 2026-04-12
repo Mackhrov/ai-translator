@@ -1,0 +1,53 @@
+{
+  "translation": {
+    "appName": "Lingua",
+    "tabs": { "translator": "Übersetzer", "saved": "Wörterbuch", "history": "Verlauf" },
+    "auth": {
+      "login": "Anmelden", "register": "Registrieren",
+      "email": "E-Mail", "password": "Passwort", "username": "Benutzername",
+      "loginBtn": "Anmelden →", "registerBtn": "Konto erstellen →",
+      "loading": "Laden...", "loginSubtitle": "In dein Konto einloggen",
+      "registerSubtitle": "Konto erstellen",
+      "errors": { "usernameRequired": "Benutzername eingeben", "passwordShort": "Passwort mindestens 6 Zeichen" }
+    },
+    "translator": {
+      "from": "Von", "to": "Nach", "auto": "Auto",
+      "textPlaceholder": "Text eingeben...", "translate": "Übersetzen", "translating": "Übersetze...",
+      "mode": { "label": "Modus", "simple": "Schnell", "detailed": "KI-Analyse" },
+      "counter": "{{count}} / {{max}}",
+      "tooLong": "Text zu lang für KI-Analyse. Fragment auswählen.",
+      "differentLangs": "Bitte verschiedene Sprachen wählen"
+    },
+    "result": {
+      "translation": "Übersetzung", "variants": "Varianten", "grammar": "Grammatik",
+      "tip": "Tipp", "formality": "Formalität", "transcription": "Transkription",
+      "copy": "Kopieren", "saveToDict": "+ Speichern",
+      "detectedLang": "Sprache: {{lang}}", "analyzeSelection": "KI-Analyse →"
+    },
+    "settings": {
+      "title": "KI-Analyse Einstellungen", "aiSettings": "KI Einstellungen",
+      "include": "In KI-Analyse einbeziehen:",
+      "lengthLogic": "Längenlogik",
+      "lengths": { "short": "bis 50 Zeichen", "medium": "50 – 300 Zeichen", "long": "300+ Zeichen" },
+      "lengthDescs": { "short": "Vollständige KI-Analyse", "medium": "Übersetzung + Sektionen", "long": "Nur Übersetzung" },
+      "toggles": {
+        "variants": "Übersetzungsvarianten", "variantsDesc": "3 alternative Formulierungen",
+        "grammar": "Grammatik", "grammarDesc": "Zeitform, Struktur, Wortarten",
+        "tip": "Verwendungstipp", "tipDesc": "Wann und wie die Phrase verwenden",
+        "formality": "Formalität", "formalityDesc": "Formell oder umgangssprachlich",
+        "transcription": "Transkription", "transcriptionDesc": "Aussprache in jeder Sprache"
+      }
+    },
+    "saved": { "empty": "Wörterbuch leer", "count": "Wörterbuch — {{count}}" },
+    "history": { "clear": "Löschen" },
+    "limit": { "remaining": "{{remaining}} / {{total}} Übersetzungen" },
+    "errors": {
+      "noInternet": "Keine Internetverbindung", "serverDown": "Server nicht erreichbar",
+      "rateLimit": "Tageslimit erreicht!", "serverError": "Serverfehler",
+      "noCredits": "API-Guthaben erschöpft", "unknown": "Etwas ist schiefgelaufen",
+      "emptyResponse": "Leere Serverantwort", "retry": "Wiederholen"
+    },
+    "user": { "logout": "Abmelden" },
+    "languages": { "auto": "Auto", "Russian": "Russisch", "English": "Englisch", "German": "Deutsch", "French": "Französisch", "Spanish": "Spanisch", "Chinese": "Chinesisch", "Ukrainian": "Ukrainisch" }
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "translation": {
+    "appName": "Lingua",
+    "tabs": {
+      "translator": "Translator",
+      "saved": "Dictionary",
+      "history": "History"
+    },
+    "auth": {
+      "login": "Login",
+      "register": "Register",
+      "email": "Email",
+      "password": "Password",
+      "username": "Username",
+      "loginBtn": "Sign in →",
+      "registerBtn": "Create account →",
+      "loading": "Loading...",
+      "loginSubtitle": "Sign in to your account",
+      "registerSubtitle": "Create an account",
+      "errors": {
+        "usernameRequired": "Enter a username",
+        "passwordShort": "Password must be at least 6 characters"
+      }
+    },
+    "translator": {
+      "from": "From",
+      "to": "To",
+      "auto": "Auto",
+      "textPlaceholder": "Enter text...",
+      "translate": "Translate",
+      "translating": "Translating...",
+      "mode": {
+        "label": "Mode",
+        "simple": "Quick",
+        "detailed": "AI Analysis"
+      },
+      "counter": "{{count}} / {{max}}",
+      "tooLong": "Text is too long for AI analysis. Select a fragment.",
+      "differentLangs": "Please select different languages"
+    },
+    "result": {
+      "translation": "Translation",
+      "variants": "Variants",
+      "grammar": "Grammar",
+      "tip": "Tip",
+      "formality": "Formality",
+      "transcription": "Transcription",
+      "copy": "Copy",
+      "saveToDict": "+ Save",
+      "detectedLang": "Language: {{lang}}",
+      "analyzeSelection": "AI analysis →"
+    },
+    "settings": {
+      "title": "AI Analysis Settings",
+      "aiSettings": "AI settings",
+      "include": "Include in AI analysis:",
+      "lengthLogic": "Length logic",
+      "lengths": {
+        "short": "up to 50 chars",
+        "medium": "50 – 300 chars",
+        "long": "300+ chars"
+      },
+      "lengthDescs": {
+        "short": "Full AI analysis automatically",
+        "medium": "Translation + selected sections",
+        "long": "Translation only, select fragment for AI"
+      },
+      "toggles": {
+        "variants": "Translation variants",
+        "variantsDesc": "3 alternative phrasings",
+        "grammar": "Grammar",
+        "grammarDesc": "Tense, structure, parts of speech",
+        "tip": "Usage tip",
+        "tipDesc": "When and how to use the phrase",
+        "formality": "Formality",
+        "formalityDesc": "Formal or conversational style",
+        "transcription": "Transcription",
+        "transcriptionDesc": "Pronunciation in any language"
+      }
+    },
+    "saved": {
+      "empty": "Dictionary is empty — click \"+ Save\" after translation",
+      "count": "Dictionary — {{count}}"
+    },
+    "history": {
+      "clear": "Clear"
+    },
+    "limit": {
+      "remaining": "{{remaining}} / {{total}} translations"
+    },
+    "errors": {
+      "noInternet": "No internet connection",
+      "serverDown": "Could not connect to server",
+      "rateLimit": "Daily limit reached — come back tomorrow!",
+      "serverError": "Server error — try again",
+      "noCredits": "API credits exhausted",
+      "unknown": "Something went wrong — try again",
+      "emptyResponse": "Empty server response — try again",
+      "retry": "Retry"
+    },
+    "user": {
+      "logout": "Logout"
+    },
+    "languages": {
+      "auto": "Auto",
+      "Russian": "Russian",
+      "English": "English",
+      "German": "German",
+      "French": "French",
+      "Spanish": "Spanish",
+      "Chinese": "Chinese",
+      "Ukrainian": "Ukrainian"
+    }
+  }
+}

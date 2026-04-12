@@ -1,0 +1,115 @@
+{
+  "translation": {
+    "appName": "Lingua",
+    "tabs": {
+      "translator": "Переводчик",
+      "saved": "Словарь",
+      "history": "История"
+    },
+    "auth": {
+      "login": "Войти",
+      "register": "Регистрация",
+      "email": "Email",
+      "password": "Пароль",
+      "username": "Имя пользователя",
+      "loginBtn": "Войти →",
+      "registerBtn": "Создать аккаунт →",
+      "loading": "Загрузка...",
+      "loginSubtitle": "Войди в свой аккаунт",
+      "registerSubtitle": "Создай аккаунт",
+      "errors": {
+        "usernameRequired": "Введи имя пользователя",
+        "passwordShort": "Пароль минимум 6 символов"
+      }
+    },
+    "translator": {
+      "from": "Откуда",
+      "to": "Куда",
+      "auto": "Авто",
+      "textPlaceholder": "Введи текст...",
+      "translate": "Перевести",
+      "translating": "Переводим...",
+      "mode": {
+        "label": "Режим",
+        "simple": "Быстрый",
+        "detailed": "AI-разбор"
+      },
+      "counter": "{{count}} / {{max}}",
+      "tooLong": "Текст длинный — AI-разбор недоступен. Выдели нужный фрагмент.",
+      "differentLangs": "Выбери разные языки для перевода"
+    },
+    "result": {
+      "translation": "Перевод",
+      "variants": "Варианты",
+      "grammar": "Грамматика",
+      "tip": "Совет",
+      "formality": "Формальность",
+      "transcription": "Транскрипция",
+      "copy": "Копировать",
+      "saveToDict": "+ В словарь",
+      "detectedLang": "Язык: {{lang}}",
+      "analyzeSelection": "AI-разбор выделенного →"
+    },
+    "settings": {
+      "title": "Настройки AI-разбора",
+      "aiSettings": "AI настройки",
+      "include": "Что включать в AI-разбор:",
+      "lengthLogic": "Логика по длине",
+      "lengths": {
+        "short": "до 50 символов",
+        "medium": "50 – 300 символов",
+        "long": "300+ символов"
+      },
+      "lengthDescs": {
+        "short": "Полный AI-разбор автоматически",
+        "medium": "Перевод + выбранные секции",
+        "long": "Только перевод, можно выделить часть"
+      },
+      "toggles": {
+        "variants": "Варианты перевода",
+        "variantsDesc": "3 альтернативных формулировки",
+        "grammar": "Грамматика",
+        "grammarDesc": "Время, структура, части речи",
+        "tip": "Совет по использованию",
+        "tipDesc": "Когда и как применять фразу",
+        "formality": "Формальность",
+        "formalityDesc": "Формальный или разговорный стиль",
+        "transcription": "Транскрипция",
+        "transcriptionDesc": "Произношение на любом языке"
+      }
+    },
+    "saved": {
+      "empty": "Словарь пуст — нажми \"+ В словарь\" после перевода",
+      "count": "Словарь — {{count}}"
+    },
+    "history": {
+      "clear": "Очистить"
+    },
+    "limit": {
+      "remaining": "{{remaining}} / {{total}} переводов"
+    },
+    "errors": {
+      "noInternet": "Нет подключения к интернету",
+      "serverDown": "Не удалось подключиться к серверу — убедись что бекенд запущен",
+      "rateLimit": "Лимит переводов на сегодня исчерпан — возвращайся завтра!",
+      "serverError": "Ошибка на сервере — попробуй ещё раз",
+      "noCredits": "Закончились кредиты API — проверь баланс",
+      "unknown": "Что-то пошло не так — попробуй ещё раз",
+      "emptyResponse": "Сервер вернул пустой ответ — попробуй ещё раз",
+      "retry": "Повторить"
+    },
+    "user": {
+      "logout": "Выйти"
+    },
+    "languages": {
+      "auto": "Авто",
+      "Russian": "Русский",
+      "English": "English",
+      "German": "Deutsch",
+      "French": "Français",
+      "Spanish": "Español",
+      "Chinese": "中文",
+      "Ukrainian": "Українська"
+    }
+  }
+}

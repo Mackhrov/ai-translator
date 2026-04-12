@@ -85,6 +85,7 @@ class TranslateRequest(BaseModel):
     text: str
     target_language: str = "English"
     source_language: str = "auto"
+    sections: dict = {}
 
 class SaveRequest(BaseModel):
     original: str
@@ -153,23 +154,23 @@ def translate(req_body: TranslateRequest, request: Request, current_user=Depends
 @app.post("/translate/detailed")
 def translate_detailed(req_body: TranslateRequest, request: Request, current_user=Depends(get_current_user), db=Depends(get_db)):
     check_limit(request)
-    system = """Ты профессиональный переводчик. Отвечай ТОЛЬКО на русском языке.
 
-ЯЗЫК: [язык оригинала]
+    sections = req_body.sections if hasattr(req_body, 'sections') else {}
 
-ПЕРЕВОД:
-[перевод]
+    system = "Ты профессиональный переводчик. Отвечай ТОЛЬКО на русском языке.\n\n"
+    system += "ЯЗЫК: [язык оригинала]\n\nПЕРЕВОД:\n[перевод]\n\n"
 
-ВАРИАНТЫ:
-- [вариант 1]
-- [вариант 2]
-- [вариант 3]
+    if sections.get('variants', True):
+        system += "ВАРИАНТЫ:\n- [вариант 1]\n- [вариант 2]\n- [вариант 3]\n\n"
+    if sections.get('grammar', True):
+        system += "ГРАММАТИКА:\n[объяснение]\n\n"
+    if sections.get('tip', False):
+        system += "СОВЕТ:\n[совет по использованию]\n\n"
+    if sections.get('formality', False):
+        system += "ФОРМАЛЬНОСТЬ:\n[формальный или разговорный, объяснение]\n\n"
+    if sections.get('transcription', False):
+        system += "ТРАНСКРИПЦИЯ:\n[транскрипция произношения]\n\n"
 
-ГРАММАТИКА:
-[объяснение]
-
-СОВЕТ:
-[совет]"""
     user_msg = f"Переведи на {req_body.target_language}:\n\n{req_body.text}"
     result = call_groq(system, user_msg)
     entry = History(user_id=current_user.id, original=req_body.text, translation=result, target_lang=req_body.target_language, mode="detailed")

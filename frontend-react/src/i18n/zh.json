@@ -1,0 +1,53 @@
+{
+  "translation": {
+    "appName": "Lingua",
+    "tabs": { "translator": "翻译", "saved": "词典", "history": "历史" },
+    "auth": {
+      "login": "登录", "register": "注册",
+      "email": "邮箱", "password": "密码", "username": "用户名",
+      "loginBtn": "登录 →", "registerBtn": "创建账户 →",
+      "loading": "加载中...", "loginSubtitle": "登录您的账户",
+      "registerSubtitle": "创建账户",
+      "errors": { "usernameRequired": "请输入用户名", "passwordShort": "密码至少6个字符" }
+    },
+    "translator": {
+      "from": "从", "to": "到", "auto": "自动",
+      "textPlaceholder": "输入文本...", "translate": "翻译", "translating": "翻译中...",
+      "mode": { "label": "模式", "simple": "快速", "detailed": "AI分析" },
+      "counter": "{{count}} / {{max}}",
+      "tooLong": "文本太长，无法进行AI分析。请选择片段。",
+      "differentLangs": "请选择不同的语言"
+    },
+    "result": {
+      "translation": "翻译", "variants": "变体", "grammar": "语法",
+      "tip": "提示", "formality": "正式程度", "transcription": "转录",
+      "copy": "复制", "saveToDict": "+ 保存",
+      "detectedLang": "语言：{{lang}}", "analyzeSelection": "AI分析 →"
+    },
+    "settings": {
+      "title": "AI分析设置", "aiSettings": "AI设置",
+      "include": "包含在AI分析中：",
+      "lengthLogic": "长度逻辑",
+      "lengths": { "short": "50字符以内", "medium": "50–300字符", "long": "300+字符" },
+      "lengthDescs": { "short": "自动完整AI分析", "medium": "翻译+选定部分", "long": "仅翻译，选择片段" },
+      "toggles": {
+        "variants": "翻译变体", "variantsDesc": "3种替代表达",
+        "grammar": "语法", "grammarDesc": "时态、结构、词性",
+        "tip": "使用建议", "tipDesc": "何时及如何使用该短语",
+        "formality": "正式程度", "formalityDesc": "正式或口语风格",
+        "transcription": "转录", "transcriptionDesc": "任何语言的发音"
+      }
+    },
+    "saved": { "empty": "词典为空 — 翻译后点击\"+ 保存\"", "count": "词典 — {{count}}个" },
+    "history": { "clear": "清除" },
+    "limit": { "remaining": "{{remaining}} / {{total}} 次翻译" },
+    "errors": {
+      "noInternet": "无网络连接", "serverDown": "无法连接到服务器",
+      "rateLimit": "今日翻译次数已达上限！", "serverError": "服务器错误",
+      "noCredits": "API额度已用尽", "unknown": "出错了",
+      "emptyResponse": "服务器返回空响应", "retry": "重试"
+    },
+    "user": { "logout": "退出" },
+    "languages": { "auto": "自动", "Russian": "俄语", "English": "英语", "German": "德语", "French": "法语", "Spanish": "西班牙语", "Chinese": "中文", "Ukrainian": "乌克兰语" }
+  }
+}
