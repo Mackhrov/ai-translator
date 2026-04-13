@@ -25,7 +25,7 @@ app.add_middleware(
 )
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-DAILY_LIMIT = 10
+DAILY_LIMIT = 30
 limits = defaultdict(lambda: {"count": 0, "date": ""})
 
 LANG_NAMES = {
