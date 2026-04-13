@@ -165,32 +165,64 @@ def translate_detailed(req_body: TranslateRequest, request: Request, current_use
     check_limit(current_user, db)
 
     ui_lang = LANG_NAMES.get(req_body.ui_language[:2] if req_body.ui_language else 'en', 'English')
+    target = req_body.target_language
     sections = req_body.sections
 
-    system = (
-        f"You are a professional translator and language teacher.\n"
-        f"IMPORTANT: Write ALL your explanations, labels and text ONLY in {ui_lang}.\n"
-        f"The translation itself should be in {req_body.target_language}.\n"
-        f"Never mix languages in your response.\n\n"
-        f"Use EXACTLY this format:\n\n"
-        f"LANGUAGE: [name of the source language in {ui_lang}]\n\n"
-        f"TRANSLATION:\n[translation in {req_body.target_language}]\n\n"
-    )
+    system = f"""You are a professional translator. Follow these rules STRICTLY:
+1. Translate the given text into {target}
+2. Write ALL section labels and explanations in {ui_lang} ONLY
+3. NEVER use English in explanations if {ui_lang} is not English
+4. Use EXACTLY this structure, no deviations:
+
+LANGUAGE: [source language name written in {ui_lang}]
+
+TRANSLATION:
+[translation in {target}]
+"""
 
     if sections.get('variants', True):
-        system += f"VARIANTS:\n- [variant 1 in {req_body.target_language}]\n- [variant 2 in {req_body.target_language}]\n- [variant 3 in {req_body.target_language}]\n\n"
-    if sections.get('grammar', True):
-        system += f"GRAMMAR:\n[grammar explanation in {ui_lang}]\n\n"
-    if sections.get('tip', False):
-        system += f"TIP:\n[usage tip in {ui_lang}]\n\n"
-    if sections.get('formality', False):
-        system += f"FORMALITY:\n[formality explanation in {ui_lang}]\n\n"
-    if sections.get('transcription', False):
-        system += f"TRANSCRIPTION:\n[pronunciation of the {req_body.target_language} translation]\n\n"
+        system += f"""
+VARIANTS:
+- [alternative 1 in {target}]
+- [alternative 2 in {target}]
+- [alternative 3 in {target}]
+"""
 
-    user_msg = f"Translate this text to {req_body.target_language}:\n\n{req_body.text}"
+    if sections.get('grammar', True):
+        system += f"""
+GRAMMAR:
+[grammar explanation written in {ui_lang}]
+"""
+
+    if sections.get('tip', False):
+        system += f"""
+TIP:
+[usage tip written in {ui_lang}]
+"""
+
+    if sections.get('formality', False):
+        system += f"""
+FORMALITY:
+[formality explanation written in {ui_lang}]
+"""
+
+    if sections.get('transcription', False):
+        system += f"""
+TRANSCRIPTION:
+[pronunciation of the {target} translation]
+"""
+
+    system += f"\nREMEMBER: All explanations must be in {ui_lang}. Translations must be in {target}."
+
+    user_msg = f"Translate to {target}:\n\n{req_body.text}"
     result = call_groq(system, user_msg)
-    entry = History(user_id=current_user.id, original=req_body.text, translation=result, target_lang=req_body.target_language, mode="detailed")
+    entry = History(
+        user_id=current_user.id,
+        original=req_body.text,
+        translation=result,
+        target_lang=target,
+        mode="detailed"
+    )
     db.add(entry)
     db.commit()
     return {"translation": result}
