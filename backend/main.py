@@ -15,7 +15,8 @@ init_db()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=[ALLOWED_ORIGINS,  "http://localhost:5173",
+        "https://ai-translator-snowy-ten.vercel.app",],
     allow_origin_regex=ALLOWED_ORIGIN_REGEX,
     allow_methods=["*"],
     allow_headers=["*"],
