@@ -1,18 +1,24 @@
-export function parseError(err, status) {
+export function parseError(err, t) {
   if (!navigator.onLine) {
-    return 'Нет подключения к интернету'
+    return t('errors.noInternet')
   }
-  if (err.message === 'Failed to fetch') {
-    return 'Не удалось подключиться к серверу — убедись что бекенд запущен'
+
+  if (err?.message === 'Failed to fetch') {
+    return t('errors.serverDown')
   }
-  if (status === 429) {
-    return 'Лимит переводов на сегодня исчерпан — возвращайся завтра!'
+
+  switch (err?.status) {
+    case 429:
+      return t('errors.rateLimit')
+    case 403:
+      return t('errors.noCredits')
+    case 502:
+    case 503:
+    case 504:
+      return t('errors.serverDown')
+    case 500:
+      return t('errors.serverError')
+    default:
+      return err?.message || t('errors.unknown')
   }
-  if (status === 500) {
-    return 'Ошибка на сервере — попробуй ещё раз'
-  }
-  if (status === 403) {
-    return 'Закончились кредиты API — проверь баланс'
-  }
-  return 'Что-то пошло не так — попробуй ещё раз'
 }

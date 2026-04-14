@@ -1,113 +1,142 @@
-const BASE = 'https://ai-translator-production-d1ee.up.railway.app'
+const DEFAULT_BASE = 'https://ai-translator-production-d1ee.up.railway.app'
+const BASE = (import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE).replace(/\/$/, '')
 
-function getToken() {
-  return localStorage.getItem('lingua_token')
+function createError(message, status, data) {
+  const error = new Error(message || 'Request failed')
+  error.status = status
+  error.data = data
+  return error
 }
 
-function authHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${getToken()}`
+async function parseResponse(response) {
+  const text = await response.text()
+  let data = {}
+
+  if (text) {
+    try {
+      data = JSON.parse(text)
+    } catch {
+      data = { detail: text }
+    }
   }
+
+  if (!response.ok) {
+    throw createError(data.detail || `Request failed with status ${response.status}`, response.status, data)
+  }
+
+  return data
+}
+
+async function request(path, { method = 'GET', auth = false, body, headers = {} } = {}) {
+  const requestHeaders = { ...headers }
+
+  if (body !== undefined) {
+    requestHeaders['Content-Type'] = 'application/json'
+  }
+
+  if (auth) {
+    const token = localStorage.getItem('lingua_token')
+    if (token) {
+      requestHeaders.Authorization = `Bearer ${token}`
+    }
+  }
+
+  const response = await fetch(`${BASE}${path}`, {
+    method,
+    headers: requestHeaders,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  })
+
+  return parseResponse(response)
 }
 
 export const api = {
-  async register(username, email, password) {
-    const r = await fetch(`${BASE}/register`, {
+  login(email, password) {
+    return request('/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password })
+      body: { email, password },
     })
-    const data = await r.json()
-    if (!r.ok) throw new Error(data.detail)
-    return data
   },
 
-  async login(email, password) {
-    const r = await fetch(`${BASE}/login`, {
+  register(username, email, password) {
+    return request('/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: { username, email, password },
     })
-    const data = await r.json()
-    if (!r.ok) throw new Error(data.detail)
-    return data
   },
 
-  async translate(text, targetLang, sourceLang) {
-    const r = await fetch(`${BASE}/translate`, {
+  me() {
+    return request('/me', { auth: true })
+  },
+
+  translate(text, targetLang, sourceLang) {
+    return request('/translate', {
       method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ text, target_language: targetLang, source_language: sourceLang })
+      auth: true,
+      body: {
+        text,
+        target_language: targetLang,
+        source_language: sourceLang,
+      },
     })
-    const data = await r.json()
-    if (!r.ok) throw new Error(data.detail)
-    return data
-  },
-async translateDetailed(text, targetLang, sourceLang, settings = {}, uiLang = 'Russian') {
-  const langMap = {
-    ru: 'Russian', en: 'English', de: 'German',
-    uk: 'Ukrainian', es: 'Spanish', zh: 'Chinese'
-  }
-  const r = await fetch(`${BASE}/translate/detailed`, {
-    method: 'POST',
-    headers: authHeaders(),
-    body: JSON.stringify({
-      text,
-      target_language: targetLang,
-      source_language: sourceLang,
-      ui_language: langMap[uiLang] || 'English',
-      sections: {
-        variants: settings.showVariants ?? true,
-        grammar: settings.showGrammar ?? true,
-        tip: settings.showTip ?? false,
-        formality: settings.showFormality ?? false,
-        transcription: settings.showTranscription ?? false,
-      }
-    })
-  })
-  const data = await r.json()
-  if (!r.ok) throw new Error(data.detail)
-  return data
-},
-
-  async getSaved() {
-    const r = await fetch(`${BASE}/saved`, { headers: authHeaders() })
-    const data = await r.json()
-    if (!r.ok) throw new Error(data.detail)
-    return data
   },
 
-  async saveWord(original, translation, targetLang, mode) {
-    const r = await fetch(`${BASE}/saved`, {
+  translateDetailed(text, targetLang, sourceLang, settings = {}, uiLang = 'en') {
+    return request('/translate/detailed', {
       method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ original, translation, target_lang: targetLang, mode })
+      auth: true,
+      body: {
+        text,
+        target_language: targetLang,
+        source_language: sourceLang,
+        ui_language: (uiLang || 'en').slice(0, 2).toLowerCase(),
+        sections: {
+          variants: settings.showVariants ?? true,
+          grammar: settings.showGrammar ?? true,
+          tip: settings.showTip ?? false,
+          formality: settings.showFormality ?? false,
+          transcription: settings.showTranscription ?? false,
+        },
+      },
     })
-    const data = await r.json()
-    if (!r.ok) throw new Error(data.detail)
-    return data
   },
 
-  async deleteSaved(id) {
-    const r = await fetch(`${BASE}/saved/${id}`, {
+  getSaved() {
+    return request('/saved', { auth: true })
+  },
+
+  saveWord(original, translation, targetLang, mode) {
+    return request('/saved', {
+      method: 'POST',
+      auth: true,
+      body: {
+        original,
+        translation,
+        target_lang: targetLang,
+        mode,
+      },
+    })
+  },
+
+  deleteSaved(id) {
+    return request(`/saved/${id}`, {
       method: 'DELETE',
-      headers: authHeaders()
+      auth: true,
     })
-    const data = await r.json()
-    if (!r.ok) throw new Error(data.detail)
-    return data
   },
 
-  async getHistory() {
-    const r = await fetch(`${BASE}/history`, { headers: authHeaders() })
-    const data = await r.json()
-    if (!r.ok) throw new Error(data.detail)
-    return data
+  getHistory() {
+    return request('/history', { auth: true })
   },
 
-  async getLimit() {
-    const r = await fetch(`${BASE}/limit`)
-    return r.json()
-  }
+  clearHistory() {
+    return request('/history', {
+      method: 'DELETE',
+      auth: true,
+    })
+  },
+
+  getLimit() {
+    return request('/limit', { auth: true })
+  },
 }

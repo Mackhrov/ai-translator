@@ -1,7 +1,11 @@
-function ErrorBox({ message, onRetry }) {
+import { useTranslation } from 'react-i18next'
+
+function ErrorBox({ message, onRetry, variant = 'error' }) {
+  const { t } = useTranslation()
+
   if (!message) return null
 
-  const isWarning = message.includes('разные языки')
+  const isWarning = variant === 'warning'
 
   return (
     <div style={{
@@ -14,7 +18,8 @@ function ErrorBox({ message, onRetry }) {
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: '12px',
-    }}>
+    }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{
           width: '8px',
@@ -22,7 +27,8 @@ function ErrorBox({ message, onRetry }) {
           borderRadius: '50%',
           background: isWarning ? '#f0c060' : '#ff6060',
           flexShrink: 0,
-        }}/>
+        }}
+        />
         <span style={{ fontSize: '14px', color: isWarning ? '#f0c060' : '#ff8080', lineHeight: '1.4' }}>
           {message}
         </span>
@@ -42,7 +48,7 @@ function ErrorBox({ message, onRetry }) {
             cursor: 'pointer',
           }}
         >
-          Повторить
+          {t('errors.retry')}
         </button>
       )}
     </div>

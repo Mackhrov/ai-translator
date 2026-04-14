@@ -1,25 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import AuthPage from './components/AuthPage'
-import LanguageSelector from './components/LanguageSelector'
-import ModeToggle from './components/ModeToggle'
-import TranslateBox from './components/TranslateBox'
-import ResultBox from './components/ResultBox'
-import HistoryList from './components/HistoryList'
-import ErrorBox from './components/ErrorBox'
-import SavedList from './components/SavedList'
-import LimitBar from './components/LimitBar'
+
+import Footer from './components/Footer'
 import AISettings from './components/AISettings'
+import AuthPage from './components/AuthPage'
+import ErrorBox from './components/ErrorBox'
 import GlobePicker from './components/GlobePicker'
+import HistoryList from './components/HistoryList'
+import LanguageSelector from './components/LanguageSelector'
+import LimitBar from './components/LimitBar'
+import ModeToggle from './components/ModeToggle'
+import ResultBox from './components/ResultBox'
+import SavedList from './components/SavedList'
+import TranslateBox from './components/TranslateBox'
 import UserMenu from './components/UserMenu'
-import { api } from './utils/api'
-import { parseError } from './utils/errors'
 import { useSettings } from './hooks/useSettings'
 import { useTheme } from './hooks/useTheme'
-import Footer from './components/Footer'
+import { api } from './utils/api'
+import { parseError } from './utils/errors'
 
 function App() {
   const [user, setUser] = useState(localStorage.getItem('lingua_username'))
+  const [authReady, setAuthReady] = useState(false)
   const [sourceLang, setSourceLang] = useState('auto')
   const [targetLang, setTargetLang] = useState('English')
   const [mode, setMode] = useState('simple')
@@ -27,6 +29,8 @@ function App() {
   const [translation, setTranslation] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [errorType, setErrorType] = useState('error')
+  const [showRetry, setShowRetry] = useState(false)
   const [history, setHistory] = useState([])
   const [saved, setSaved] = useState([])
   const [tab, setTab] = useState('translate')
@@ -36,20 +40,7 @@ function App() {
   const { theme, toggleTheme } = useTheme()
   const { t, i18n } = useTranslation()
 
-  useEffect(() => {
-    if (user) {
-      api.getSaved().then(setSaved).catch(() => {})
-      api.getHistory().then(setHistory).catch(() => {})
-    }
-  }, [user])
-
-  function handleLogin(username) {
-    setUser(username)
-    api.getSaved().then(setSaved).catch(() => {})
-    api.getHistory().then(setHistory).catch(() => {})
-  }
-
-  function handleLogout() {
+  function clearSession() {
     localStorage.removeItem('lingua_token')
     localStorage.removeItem('lingua_username')
     setUser(null)
@@ -58,17 +49,85 @@ function App() {
     setTranslation('')
   }
 
+  useEffect(() => {
+    const token = localStorage.getItem('lingua_token')
+    if (!token) {
+      setAuthReady(true)
+      return
+    }
+
+    api.me()
+      .then((data) => {
+        localStorage.setItem('lingua_username', data.username)
+        setUser(data.username)
+      })
+      .catch(() => {
+        clearSession()
+      })
+      .finally(() => {
+        setAuthReady(true)
+      })
+  }, [])
+
+  useEffect(() => {
+    if (!authReady || !user) return
+
+    Promise.all([api.getSaved(), api.getHistory()])
+      .then(([savedItems, historyItems]) => {
+        setSaved(savedItems)
+        setHistory(historyItems)
+      })
+      .catch((err) => {
+        if (err?.status === 401) {
+          clearSession()
+          return
+        }
+        setError(parseError(err, t))
+        setErrorType('error')
+        setShowRetry(false)
+      })
+  }, [authReady, user, t])
+
+  function handleLogin(username) {
+    setUser(username)
+    setAuthReady(true)
+    setError('')
+    setShowRetry(false)
+  }
+
+  function handleLogout() {
+    clearSession()
+    setError('')
+    setShowRetry(false)
+  }
+
   function handleModeChange(newMode) {
     setMode(newMode)
     setTranslation('')
     setError('')
+    setShowRetry(false)
+  }
+
+  function handleRequestError(err, { retryable = false, variant = 'error' } = {}) {
+    if (err?.status === 401) {
+      handleLogout()
+      return true
+    }
+
+    setError(parseError(err, t))
+    setErrorType(variant)
+    setShowRetry(retryable)
+    return false
   }
 
   async function handleTranslate(overrideText) {
     const inputText = overrideText || text
     if (!inputText?.trim()) return
+
     if (sourceLang !== 'auto' && sourceLang === targetLang) {
       setError(t('translator.differentLangs'))
+      setErrorType('warning')
+      setShowRetry(false)
       return
     }
 
@@ -78,26 +137,26 @@ function App() {
 
     setLoading(true)
     setError('')
+    setShowRetry(false)
     setTranslation('')
 
     try {
-      let data
-      if (effectiveMode === 'detailed') {
-        data = await api.translateDetailed(inputText, targetLang, sourceLang, settings, i18n.language)
-      } else {
-        data = await api.translate(inputText, targetLang, sourceLang)
-      }
+      const data = effectiveMode === 'detailed'
+        ? await api.translateDetailed(inputText, targetLang, sourceLang, settings, i18n.language)
+        : await api.translate(inputText, targetLang, sourceLang)
 
       setTranslation(data.translation)
       setMode(effectiveMode)
-      setTranslateCount(c => c + 1)
-      setHistory(prev => [
+      setTranslateCount((count) => count + 1)
+      setHistory((prev) => [
         { original: inputText, translation: data.translation, targetLang, mode: effectiveMode },
-        ...prev
+        ...prev,
       ].slice(0, 20))
-
     } catch (err) {
-      setError(parseError(err, err.message?.includes('429') ? 429 : null))
+      handleRequestError(err, {
+        retryable: !overrideText && err?.status !== 429,
+        variant: err?.status === 429 ? 'warning' : 'error',
+      })
     } finally {
       setLoading(false)
     }
@@ -108,14 +167,29 @@ function App() {
       await api.saveWord(text, translation, targetLang, mode)
       const updated = await api.getSaved()
       setSaved(updated)
-    } catch {(error)
-      console.error("Ошибка при сохранении слова:", error);
+      setError('')
+      setShowRetry(false)
+    } catch (err) {
+      handleRequestError(err, { retryable: false, variant: 'error' })
     }
   }
 
   async function handleRemoveSaved(id) {
-    await api.deleteSaved(id)
-    setSaved(prev => prev.filter(s => s.id !== id))
+    try {
+      await api.deleteSaved(id)
+      setSaved((prev) => prev.filter((item) => item.id !== id))
+    } catch (err) {
+      handleRequestError(err, { retryable: false, variant: 'error' })
+    }
+  }
+
+  async function handleClearHistory() {
+    try {
+      await api.clearHistory()
+      setHistory([])
+    } catch (err) {
+      handleRequestError(err, { retryable: false, variant: 'error' })
+    }
   }
 
   function handleSelectHistory(item) {
@@ -125,17 +199,30 @@ function App() {
     setTab('translate')
   }
 
+  if (!authReady) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
+        <div style={{ fontSize: '14px', color: 'var(--text3)' }}>{t('auth.loading')}</div>
+      </div>
+    )
+  }
+
   if (!user) return <AuthPage onLogin={handleLogin} />
 
   const tabBtn = (value, label) => (
     <button
       onClick={() => setTab(value)}
       style={{
-        flex: 1, padding: '10px', background: 'transparent', border: 'none',
+        flex: 1,
+        padding: '10px',
+        background: 'transparent',
+        border: 'none',
         borderBottom: `2px solid ${tab === value ? 'var(--accent)' : 'transparent'}`,
         color: tab === value ? 'var(--accent)' : 'var(--text3)',
-        fontSize: '13px', fontWeight: tab === value ? '600' : '400',
-        cursor: 'pointer', transition: 'all .15s',
+        fontSize: '13px',
+        fontWeight: tab === value ? '600' : '400',
+        cursor: 'pointer',
+        transition: 'all .15s',
       }}
     >
       {label}{value === 'saved' && saved.length > 0 && ` (${saved.length})`}
@@ -151,7 +238,6 @@ function App() {
 
   return (
     <div style={{ maxWidth: '640px', margin: '0 auto', padding: '32px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent)', letterSpacing: '4px', textTransform: 'uppercase' }}>
           {t('appName')}
@@ -161,7 +247,7 @@ function App() {
           <UserMenu
             username={user}
             onLogout={handleLogout}
-            onSettings={() => setShowSettings(s => !s)}
+            onSettings={() => setShowSettings((value) => !value)}
             theme={theme}
             onToggleTheme={toggleTheme}
           />
@@ -200,7 +286,8 @@ function App() {
             <TranslateBox text={text} onChange={setText} onTranslate={handleTranslate} loading={loading} />
             <ErrorBox
               message={error}
-              onRetry={error && !error.includes('разные') && !error.includes('different') ? handleTranslate : null}
+              variant={errorType}
+              onRetry={showRetry ? () => handleTranslate() : null}
             />
           </div>
 
@@ -217,7 +304,9 @@ function App() {
       )}
 
       {tab === 'saved' && <SavedList saved={saved} onRemove={handleRemoveSaved} />}
-      {tab === 'history' && <HistoryList history={history} onSelect={handleSelectHistory} onClear={() => setHistory([])} />}
+      {tab === 'history' && (
+        <HistoryList history={history} onSelect={handleSelectHistory} onClear={handleClearHistory} />
+      )}
       <Footer />
     </div>
   )

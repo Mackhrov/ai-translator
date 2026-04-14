@@ -1,7 +1,9 @@
-import { useState, useEffect} from 'react'
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 function SelectionAnalyzer({ containerRef, onAnalyze }) {
   const [popup, setPopup] = useState(null)
+  const { t } = useTranslation()
 
   useEffect(() => {
     function handleSelection() {
@@ -30,6 +32,7 @@ function SelectionAnalyzer({ containerRef, onAnalyze }) {
 
     document.addEventListener('mouseup', handleSelection)
     document.addEventListener('touchend', handleSelection)
+
     return () => {
       document.removeEventListener('mouseup', handleSelection)
       document.removeEventListener('touchend', handleSelection)
@@ -39,29 +42,30 @@ function SelectionAnalyzer({ containerRef, onAnalyze }) {
   if (!popup) return null
 
   return (
-    <div style={{
-      position: 'absolute',
-      left: popup.x,
-      top: popup.y,
-      transform: 'translateX(-50%)',
-      zIndex: 100,
-      background: 'var(--accent)',
-      color: '#0f0f13',
-      padding: '7px 16px',
-      borderRadius: '100px',
-      fontSize: '13px',
-      fontWeight: '700',
-      cursor: 'pointer',
-      whiteSpace: 'nowrap',
-      boxShadow: '0 4px 20px rgba(157,148,255,0.3)',
-    }}
+    <div
+      style={{
+        position: 'absolute',
+        left: popup.x,
+        top: popup.y,
+        transform: 'translateX(-50%)',
+        zIndex: 100,
+        background: 'var(--accent)',
+        color: '#0f0f13',
+        padding: '7px 16px',
+        borderRadius: '100px',
+        fontSize: '13px',
+        fontWeight: '700',
+        cursor: 'pointer',
+        whiteSpace: 'nowrap',
+        boxShadow: '0 4px 20px rgba(157,148,255,0.3)',
+      }}
       onClick={() => {
         onAnalyze(popup.text)
         setPopup(null)
         window.getSelection()?.removeAllRanges()
       }}
     >
-      AI-разбор выделенного →
+      {t('result.analyzeSelection')}
     </div>
   )
 }
